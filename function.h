@@ -5,5 +5,6 @@
 #include "readTopo.h"
 #include "readFlow.h"
 #include "genDepGraph.h"
+#include "updateGraph.h"
 
 #endif
