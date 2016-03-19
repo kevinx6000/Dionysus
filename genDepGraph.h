@@ -30,6 +30,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 	Operation otmp;
 	vector<int>addOpID;
 	vector<int>delOpID;
+	otmp.isFinished = false;
 
 	// Resource Node: switch
 	for(int i = 0; i < switches.size(); i++)

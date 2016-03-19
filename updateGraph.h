@@ -10,6 +10,13 @@ void updateGraph(DPGraph &dpGraph, vector<Switch> &switches,
 		vector<Link> &links, vector<Operation> &operations){
 
 	// For each finished operation node
+	for(int i = 0; i < dpGraph.nodes.size(); i++){
+		if(dpGraph.nodes[i].nodeType == OPERATION
+				&& operations[ dpGraph.nodes[i].nodeIndex ].isFinished){
+
+			// ...
+		}
+	}
 	
 	// For each resource node
 	for(int i = 0; i < dpGraph.nodes.size(); i++){
