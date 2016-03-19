@@ -94,6 +94,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 							etmp.nodeID = rID;
 							etmp.dobWeight = vol1 - vol2;
 							dpGraph.nodes[pOutID].child.push_back(etmp);
+							dpGraph.nodes[rID].parent.push_back(pOutID);
 						}
 					}
 				}
@@ -132,6 +133,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 					etmp.nodeID = switches[ sID1 ].dpID;
 					etmp.intWeight = 1;
 					dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
+					dpGraph.nodes[ switches[sID1].dpID ].parent.push_back(otmp.dpID);
 				}
 
 				// Update pointers
@@ -151,6 +153,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 				etmp.nodeID = switches[ sID1 ].dpID;
 				etmp.intWeight = 1;
 				dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
+				dpGraph.nodes[ etmp.nodeID ].parent.push_back(otmp.dpID);
 
 				// Add link in dependency graph: Path -> Link
 				for(int j = 0; j < switches[sID1].port.size(); j++){
@@ -158,6 +161,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 						etmp.nodeID = links[ switches[sID1].linkID[j] ].dpID;
 						etmp.dobWeight = allFlows[i].traffic[0][ptr1].volume[j];
 						dpGraph.nodes[pOutID].child.push_back(etmp);
+						dpGraph.nodes[ etmp.nodeID ].parent.push_back(pOutID);
 					}
 				}
 
@@ -214,12 +218,14 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 			etmp.nodeID = switches[ sID1 ].dpID;
 			etmp.intWeight = 1;
 			dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
+			dpGraph.nodes[ etmp.nodeID ].parent.push_back(otmp.dpID);
 
 			// Add link in dependency graph: Path -> Link
 			for(int j = 0; j < switches[sID1].port.size(); j++){
 				etmp.nodeID = links[ switches[sID1].linkID[j] ].dpID;
 				etmp.dobWeight = vol1;
 				dpGraph.nodes[pOutID].child.push_back(etmp);
+				dpGraph.nodes[ etmp.nodeID ].parent.push_back(pOutID);
 			}
 			ptr1++;
 		}
@@ -295,6 +301,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 				etmp.nodeID = rID;
 				etmp.dobWeight = vol1 - vol2;
 				dpGraph.nodes[pOutID].child.push_back(etmp);
+				dpGraph.nodes[ etmp.nodeID ].parent.push_back(pOutID);
 			}
 		}
 		
