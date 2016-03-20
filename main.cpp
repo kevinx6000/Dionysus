@@ -38,7 +38,7 @@ int main(void){
 #ifdef DCPL
 	else{
 		for(int i = 0; i < dpGraph.nodes.size(); i++)
-			printf("Node %2d : %2d\n", dpGraph.nodes[i].nodeID, dpGraph.CPL[i]);
+			printf("Node %2d : %2d\n", dpGraph.nodes[i].nodeID, dpGraph.nodes[i].CPL);
 	}
 #endif
 

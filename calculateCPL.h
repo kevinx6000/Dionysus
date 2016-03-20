@@ -8,13 +8,13 @@
 int dfsCPL(DPGraph &dpGraph, int nowID){
 
 	// CYCLE FOUND!!!
-	if(dpGraph.CPL[nowID] == -2) return -1;
+	if(dpGraph.nodes[nowID].CPL == -2) return -1;
 
 	// Already done
-	if(dpGraph.CPL[nowID] != -1) return dpGraph.CPL[nowID];
+	if(dpGraph.nodes[nowID].CPL != -1) return dpGraph.nodes[nowID].CPL;
 
 	// Set CPL as -2 for cycle detection
-	dpGraph.CPL[nowID] = -2;
+	dpGraph.nodes[nowID].CPL = -2;
 
 	// Recursive
 	int maxCPL = 0;
@@ -27,7 +27,7 @@ int dfsCPL(DPGraph &dpGraph, int nowID){
 
 	// Record CPL
 	if(dpGraph.nodes[nowID].nodeType == OPERATION) maxCPL++;
-	dpGraph.CPL[nowID] = maxCPL;
+	dpGraph.nodes[nowID].CPL = maxCPL;
 	return maxCPL;
 }
 
@@ -35,8 +35,8 @@ int dfsCPL(DPGraph &dpGraph, int nowID){
 bool calculateCPL(DPGraph &dpGraph){
 
 	// Clear CPL
-	for(int i = 0; i < dpGraph.CPL.size(); i++)
-		dpGraph.CPL[i] = -1;
+	for(int i = 0; i < dpGraph.nodes.size(); i++)
+		dpGraph.nodes[i].CPL = -1;
 
 	// Start from indegree = 0
 	for(int i = 0; i < dpGraph.nodes.size(); i++){

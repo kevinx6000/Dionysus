@@ -54,6 +54,7 @@ typedef struct{
 	int nodeID;			// Node in dependency graph
 	int nodeType;		// Node type (Switch/Link/Path/Operation)
 	int nodeIndex;		// Node index of that kind of node
+	int CPL;			// Record the CPL value
 	vector<Edge>child;	// List of children node
 	vector<int>parent;	// List of parent node (ID only)
 }Node;
@@ -61,7 +62,6 @@ typedef struct{
 // Dependency graph
 typedef struct{
 	vector<Node>nodes;	// List of node in dependency graph
-	vector<int>CPL;		// Record the CPL for each node
 }DPGraph;
 
 #endif

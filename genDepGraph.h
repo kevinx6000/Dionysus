@@ -11,8 +11,8 @@ int createNode(DPGraph &dpGraph, int nodeType, int nodeIndex = 0){
 	ntmp.nodeID = dpGraph.nodes.size();
 	ntmp.nodeType = nodeType;
 	ntmp.nodeIndex = nodeIndex;
+	ntmp.CPL = -1;
 	dpGraph.nodes.push_back(ntmp);
-	dpGraph.CPL.push_back(-1);
 	return ntmp.nodeID;
 }
 
