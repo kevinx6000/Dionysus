@@ -61,6 +61,7 @@ typedef struct{
 // Dependency graph
 typedef struct{
 	vector<Node>nodes;	// List of node in dependency graph
+	vector<int>CPL;		// Record the CPL for each node
 }DPGraph;
 
 #endif

@@ -29,6 +29,19 @@ int main(void){
 	// Create dependency graph
 	genDependencyGraph(dpGraph, flows, switches, links, operations);
 
+	// Update dependency graph
+	updateGraph(dpGraph, switches, links, operations);
+
+	// CPL without resource links deletion
+	if(!calculateCPL(dpGraph)) fprintf(stderr, "Cycle exists\n");
+
+#ifdef DCPL
+	else{
+		for(int i = 0; i < dpGraph.nodes.size(); i++)
+			printf("Node %2d : %2d\n", dpGraph.nodes[i].nodeID, dpGraph.CPL[i]);
+	}
+#endif
+
 	// Debug: topology
 #ifdef DTOPO
 	for(int i = 0; i < switches.size(); i++){

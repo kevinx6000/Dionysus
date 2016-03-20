@@ -38,7 +38,7 @@ void updateGraph(DPGraph &dpGraph, vector<Switch> &switches,
 				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
 					int child = dpGraph.nodes[i].child[j].nodeID;
 					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
-						if(dpGraph.nodes[child].parent[k] == index){
+						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
 							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
 							break;
 						}
@@ -65,7 +65,7 @@ void updateGraph(DPGraph &dpGraph, vector<Switch> &switches,
 				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
 					int child = dpGraph.nodes[i].child[j].nodeID;
 					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
-						if(dpGraph.nodes[child].parent[k] == index){
+						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
 							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
 							break;
 						}

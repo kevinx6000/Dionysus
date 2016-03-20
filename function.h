@@ -6,5 +6,6 @@
 #include "readFlow.h"
 #include "genDepGraph.h"
 #include "updateGraph.h"
+#include "calculateCPL.h"
 
 #endif
