@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 #define TCAM_CAPACITY 1500

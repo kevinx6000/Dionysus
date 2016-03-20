@@ -34,13 +34,16 @@ int main(void){
 
 	// CPL without resource links deletion
 	if(!calculateCPL(dpGraph)) fprintf(stderr, "Cycle exists\n");
+	else{
+		// Sort CPL in non-increasing order
+		sort(dpGraph.nodes.begin(), dpGraph.nodes.end(), cmpCPL);
 
 #ifdef DCPL
-	else{
+		// DEBUG: print CPL
 		for(int i = 0; i < dpGraph.nodes.size(); i++)
 			printf("Node %2d : %2d\n", dpGraph.nodes[i].nodeID, dpGraph.nodes[i].CPL);
-	}
 #endif
+	}
 
 	// Debug: topology
 #ifdef DTOPO

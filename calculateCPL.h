@@ -48,4 +48,9 @@ bool calculateCPL(DPGraph &dpGraph){
 	return true;
 }
 
+// Sort comparison function for Node with CPL
+bool cmpCPL(Node A, Node B){
+	return A.CPL > B.CPL;
+}
+
 #endif
