@@ -32,18 +32,18 @@ void updateGraph(DPGraph &dpGraph, vector<Switch> &switches,
 			// TCAM usage is enough for all links
 			int index = dpGraph.nodes[i].nodeIndex;
 			if(switches[index].tcamUsage >= need){
-				switches[index].tcamUsage -= need;
+//				switches[index].tcamUsage -= need;
 
 				// Delete all out links
-				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
-					int child = dpGraph.nodes[i].child[j].nodeID;
-					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
-						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
-							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
-							break;
-						}
-					}
-				}
+//				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
+//					int child = dpGraph.mapID[ dpGraph.nodes[i].child[j].nodeID ];
+//					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
+//						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
+//							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
+//							break;
+//						}
+//					}
+//				}
 				dpGraph.nodes[i].child.clear();
 			}
 		}
@@ -59,18 +59,18 @@ void updateGraph(DPGraph &dpGraph, vector<Switch> &switches,
 			// Link usage is enough for all links
 			int index = dpGraph.nodes[i].nodeIndex;
 			if(links[index].linkCapacity >= need){
-				links[index].linkCapacity -= need;
+//				links[index].linkCapacity -= need;
 
 				// Delete all out links
-				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
-					int child = dpGraph.nodes[i].child[j].nodeID;
-					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
-						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
-							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
-							break;
-						}
-					}
-				}
+//				for(int j = 0; j < dpGraph.nodes[i].child.size(); j++){
+//					int child = dpGraph.mapID[ dpGraph.nodes[i].child[j].nodeID ];
+//					for(int k = 0; k < dpGraph.nodes[child].parent.size(); k++){
+//						if(dpGraph.nodes[child].parent[k] == dpGraph.nodes[i].nodeID){
+//							dpGraph.nodes[child].parent.erase(dpGraph.nodes[child].parent.begin()+k);
+//							break;
+//						}
+//					}
+//				}
 				dpGraph.nodes[i].child.clear();
 			}
 		}

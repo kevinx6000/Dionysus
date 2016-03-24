@@ -7,5 +7,6 @@
 #include "genDepGraph.h"
 #include "updateGraph.h"
 #include "calculateCPL.h"
+#include "canScheduleOperation.h"
 
 #endif

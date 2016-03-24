@@ -62,6 +62,7 @@ typedef struct{
 // Dependency graph
 typedef struct{
 	vector<Node>nodes;	// List of node in dependency graph
+	vector<int>mapID;	// Recording the mapping from 'actual ID' to 'current index'
 }DPGraph;
 
 #endif

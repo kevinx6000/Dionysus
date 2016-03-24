@@ -38,6 +38,23 @@ int main(void){
 		// Sort CPL in non-increasing order
 		sort(dpGraph.nodes.begin(), dpGraph.nodes.end(), cmpCPL);
 
+		// Rearrange the relative index of dependency nodes
+		for(int i = 0; i < dpGraph.nodes.size(); i++)
+			dpGraph.mapID[ dpGraph.nodes[i].nodeID ] = i;
+
+		// Check all unscheduled operation nodes
+		for(int i = 0; i < dpGraph.nodes.size(); i++){
+
+			// Pick up operation node
+			if(dpGraph.nodes[i].nodeType == OPERATION){
+
+				// which is unfinished & can be schedule now
+				if(!operations[ dpGraph.nodes[i].nodeIndex ].isFinished &&
+					canScheduleOperation(dpGraph, switches, links, operations, dpGraph.mapID[ dpGraph.nodes[i].nodeID ]))
+					printf("Node %d can be scheduled now.\n", dpGraph.nodes[i].nodeID);
+			}
+		}
+
 #ifdef DCPL
 		// DEBUG: print CPL
 		for(int i = 0; i < dpGraph.nodes.size(); i++)
