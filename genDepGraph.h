@@ -27,7 +27,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 	int ptr1, ptr2, siz1, siz2, sID1, sID2;
 	int rID, ingID1, ingID2;
 	bool diff;
-	double vol1, vol2;
+	double vol1, vol2, totalFree;
 	Edge etmp;
 	Path ptmp;
 	Operation otmp;
@@ -123,7 +123,8 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 					dpGraph.nodes[ otmp.dpID ].parent.push_back(switches[sID1].dpID);
 
 					// Add link in dependency graph: Path -> Operation
-					etmp.intWeight = 0; /* NOT KNOWING WHY WEIGHT IS REQUIRED */
+					etmp.intWeight = 0;
+					/* DOUBLE WEIGHT CAN BE IGNORED HERE */
 					dpGraph.nodes[ pInID ].child.push_back(etmp);
 					dpGraph.nodes[ otmp.dpID ].parent.push_back(pInID);
 
@@ -191,7 +192,8 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 				dpGraph.nodes[ otmp.dpID ].parent.push_back( switches[sID2].dpID );
 
 				// Add link in dependency graph: Path -> Operation
-				etmp.intWeight = 0; /* NOT KNOWING WHY WEIGHT IS REQUIRED */
+				etmp.intWeight = 0;
+				/* DOUBLE WEIGHT CAN BE IGNORED HERE */
 				dpGraph.nodes[ pInID ].child.push_back(etmp);
 				dpGraph.nodes[ otmp.dpID ].parent.push_back( pInID );
 
@@ -253,7 +255,8 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 			dpGraph.nodes[ otmp.dpID ].parent.push_back( switches[sID2].dpID );
 
 			// Add link in dependency graph: Path -> Operation
-			etmp.intWeight = 0; /* NOT KNOWING WHY WEIGHT IS REQUIRED */
+			etmp.intWeight = 0;
+			/* DOUBLE WEIGHT CAN BE IGNORED HERE */
 			dpGraph.nodes[ pInID ].child.push_back(etmp);
 			dpGraph.nodes[ otmp.dpID ].parent.push_back( pInID );
 
@@ -283,12 +286,9 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 			dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
 			dpGraph.nodes[ delOpID[j] ].parent.push_back( otmp.dpID );
 		}
-		/* Mod op -> Path */
-		etmp.nodeID = pOutID;
-		dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
-		dpGraph.nodes[ pOutID ].parent.push_back( otmp.dpID );
 
 		/* Link -> Path or Path -> Link */
+		totalFree = 0.0;
 		for(int j = 0; j < switches[ allFlows[i].ingressID ].port.size(); j++){
 			vol1 = allFlows[i].traffic[0][ingID1].volume[j];
 			vol2 = allFlows[i].traffic[1][ingID2].volume[j];
@@ -308,9 +308,16 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 				etmp.dobWeight = vol1 - vol2;
 				dpGraph.nodes[pOutID].child.push_back(etmp);
 				dpGraph.nodes[ etmp.nodeID ].parent.push_back(pOutID);
+				totalFree += etmp.dobWeight;
 			}
 		}
 		
+		/* Mod op -> Path */
+		etmp.nodeID = pOutID;
+		etmp.dobWeight = totalFree;
+		dpGraph.nodes[ otmp.dpID ].child.push_back(etmp);
+		dpGraph.nodes[ pOutID ].parent.push_back( otmp.dpID );
+
 		// Clear operation index
 		addOpID.clear();
 		delOpID.clear();
