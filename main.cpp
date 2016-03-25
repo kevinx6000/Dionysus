@@ -2,13 +2,16 @@
 #include "structure.h"
 #include "function.h"
 
-// Switches
+// Switch nodes
 vector<Switch>switches;
 
-// Links
+// Link nodes
 vector<Link>links;
 
-// Operation node
+// Path nodes
+vector<Path>paths;
+
+// Operation nodes
 vector<Operation>operations;
 
 // Flow distributions
@@ -27,10 +30,10 @@ int main(void){
 	readFlow(flows, switches);
 	
 	// Create dependency graph
-	genDependencyGraph(dpGraph, flows, switches, links, operations);
+	genDependencyGraph(dpGraph, flows, switches, links, paths, operations);
 
 	// Update dependency graph
-	updateGraph(dpGraph, switches, links, operations);
+	updateGraph(dpGraph, switches, links, paths, operations);
 
 	// CPL without resource links deletion
 	if(!calculateCPL(dpGraph)) fprintf(stderr, "Cycle exists\n");
@@ -50,7 +53,7 @@ int main(void){
 
 				// which is unfinished & can be schedule now
 				if(!operations[ dpGraph.nodes[i].nodeIndex ].isFinished &&
-					canScheduleOperation(dpGraph, switches, links, operations, dpGraph.mapID[ dpGraph.nodes[i].nodeID ]))
+					canScheduleOperation(dpGraph, switches, links, paths, operations, dpGraph.mapID[ dpGraph.nodes[i].nodeID ]))
 					printf("Node %d can be scheduled now.\n", dpGraph.nodes[i].nodeID);
 			}
 		}

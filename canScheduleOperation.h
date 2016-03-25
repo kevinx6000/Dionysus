@@ -6,15 +6,14 @@
 #include "structure.h"
 
 // Check whether an operation is able to be scheduled
-bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches,
-		vector<Link> &links, vector<Operation> &operations, int owDpID){
+bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches, vector<Link> &links, 
+		vector<Path> &paths, vector<Operation> &operations, int owDpID){
 
 	// Variables
-	int owID, oaDpID, pDpID, rDpID, rID, avID;
+	int owID, oaDpID, pDpID, rDpID, rID;
 	bool canSchedule;
 	double total, avTmp;
 	Operation otmp;
-	vector<double>available;
 
 	// We only check for weight change operations
 	owID = dpGraph.nodes[owDpID].nodeIndex;
@@ -50,7 +49,7 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches,
 				}
 			}
 			if(avTmp < 1e9) total += avTmp;
-			available.push_back(avTmp);
+			paths[ dpGraph.nodes[pDpID].nodeIndex ].available = avTmp;
 		}
 	}
 
@@ -86,7 +85,6 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches,
 	if(canSchedule){
 
 		// Update link capacity resource
-		avID = 0;
 		oaDpID = dpGraph.mapID[ dpGraph.nodes[ dpGraph.mapID[ dpGraph.nodes[owDpID].parent[0] ] ].nodeID ];
 		for(int i = 0; i < dpGraph.nodes[oaDpID].parent.size(); i++){
 
@@ -95,6 +93,7 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches,
 			if(dpGraph.nodes[pDpID].nodeType == PATH){
 
 				// Resource nodes
+				avTmp = paths[ dpGraph.nodes[pDpID].nodeIndex ].available;
 				for(int j = 0; j < dpGraph.nodes[pDpID].parent.size(); j++){
 
 					// Link resource
@@ -103,17 +102,16 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches,
 
 						// Link capacity
 						rID = dpGraph.nodes[rDpID].nodeIndex;
-						links[rID].linkCapacity -= available[avID];
+						links[rID].linkCapacity -= avTmp;
 
 						// Link -> Path (only one link fits)
 						for(int k = 0; k < dpGraph.nodes[rDpID].child.size(); k++)
 							if(dpGraph.mapID[ dpGraph.nodes[rDpID].child[k].nodeID ] == pDpID)
-								dpGraph.nodes[rDpID].child[k].dobWeight -= available[avID];
+								dpGraph.nodes[rDpID].child[k].dobWeight -= avTmp;
 					}
 				}
 
 				/* NOTE: We skip line23-24 in algorithm6 since we don't have path node weight links */
-				avID++;
 			}
 		}
 

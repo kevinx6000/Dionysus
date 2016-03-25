@@ -6,8 +6,8 @@
 #include "structure.h"
 
 // Update dependency graph
-void updateGraph(DPGraph &dpGraph, vector<Switch> &switches, 
-		vector<Link> &links, vector<Operation> &operations){
+void updateGraph(DPGraph &dpGraph, vector<Switch> &switches, vector<Link> &links, 
+		vector<Path> &paths, vector<Operation> &operations){
 
 	// For each finished operation node
 	for(int i = 0; i < dpGraph.nodes.size(); i++){

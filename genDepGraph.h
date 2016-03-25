@@ -18,8 +18,8 @@ int createNode(DPGraph &dpGraph, int nodeType, int nodeIndex = 0){
 }
 
 // Generate Dependency Graph
-void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, 
-		vector<Switch> &switches, vector<Link> &links, vector<Operation> &operations){
+void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<Switch> &switches, 
+		vector<Link> &links, vector<Path> &paths, vector<Operation> &operations){
 
 	// Variables
 	int pInID;
@@ -29,9 +29,11 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 	bool diff;
 	double vol1, vol2;
 	Edge etmp;
+	Path ptmp;
 	Operation otmp;
 	vector<int>addOpID;
 	vector<int>delOpID;
+	ptmp.committed = 0.0;
 	otmp.isFinished = false;
 
 	// Resource Node: switch
@@ -46,8 +48,10 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows,
 	for(int i = 0; i < allFlows.size(); i++){
 
 		// Create path nodes
-		pInID  = createNode(dpGraph, PATH);
-		pOutID = createNode(dpGraph, PATH);
+		ptmp.dpID = pInID  = createNode(dpGraph, PATH, paths.size());
+		paths.push_back(ptmp);
+		ptmp.dpID = pOutID = createNode(dpGraph, PATH, paths.size());
+		paths.push_back(ptmp);
 
 		// Compare initial & final distribution
 		ptr1 = ptr2 = 0;

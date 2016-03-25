@@ -19,7 +19,7 @@ int dfsCPL(DPGraph &dpGraph, int nowID){
 	// Recursive
 	int maxCPL = 0;
 	for(int i = 0; i < dpGraph.nodes[nowID].child.size(); i++){
-		int nxtID = dpGraph.nodes[nowID].child[i].nodeID;
+		int nxtID = dpGraph.mapID[ dpGraph.nodes[nowID].child[i].nodeID ];
 		int tmp = dfsCPL(dpGraph, nxtID);
 		if(tmp == -1) return -1;
 		if(tmp > maxCPL) maxCPL = tmp;
@@ -41,7 +41,7 @@ bool calculateCPL(DPGraph &dpGraph){
 	// Start from indegree = 0
 	for(int i = 0; i < dpGraph.nodes.size(); i++){
 		if(!dpGraph.nodes[i].parent.size()){
-			int tmp = dfsCPL(dpGraph, dpGraph.nodes[i].nodeID);
+			int tmp = dfsCPL(dpGraph, dpGraph.mapID[ dpGraph.nodes[i].nodeID ]);
 			if(tmp == -1) return false;
 		}
 	}

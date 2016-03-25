@@ -21,6 +21,13 @@ typedef struct{
 	double linkCapacity;// Link capacity
 }Link;
 
+// Path node
+typedef struct{
+	int dpID;			// ID for dependency graph
+	double available;	// Available traffic for movement
+	double committed;	// Moved traffic on this path
+}Path;
+
 // Operation node
 enum{ OP_ADD, OP_MOD, OP_DEL };
 typedef struct{
