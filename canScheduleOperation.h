@@ -10,7 +10,7 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches, vector<Lin
 		vector<Path> &paths, vector<Operation> &operations, int owDpID){
 
 	// Variables
-	int owID, oaDpID, pDpID, rDpID, rID;
+	int owID, oaDpID, pDpID, pID, rDpID, rID;
 	bool canSchedule;
 	double total, avTmp;
 	Operation otmp;
@@ -136,6 +136,21 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches, vector<Lin
 								switches[rID].tcamUsage -= dpGraph.nodes[rDpID].child[k].intWeight;
 					}
 				}
+			}
+		}
+
+		// Update the children of change weight operation
+		for(int i = 0; i < dpGraph.nodes[owDpID].child.size(); i++){
+
+			// Path nodes
+			pDpID = dpGraph.mapID[ dpGraph.nodes[owDpID].child[i].nodeID ];
+			if(dpGraph.nodes[pDpID].nodeType == PATH){
+
+				// Committed traffic
+				pID = dpGraph.nodes[pDpID].nodeIndex;
+				paths[pID].committed = min(dpGraph.nodes[owDpID].child[i].dobWeight, total);
+				dpGraph.nodes[owDpID].child[i].dobWeight -= paths[pID].committed;
+				total -= paths[pID].committed;
 			}
 		}
 	}

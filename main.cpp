@@ -115,7 +115,10 @@ int main(void){
 				break;
 			// Path
 			case PATH:
+				ind = dpGraph.nodes[i].nodeIndex;
 				printf("PATH");
+				printf(", committed = %.2lf", paths[ind].committed);
+				printf(", avaiable = %.2lf", paths[ind].available);
 				break;
 			// Operation
 			case OPERATION:
