@@ -55,6 +55,7 @@ int main(void){
 				if(!operations[ dpGraph.nodes[i].nodeIndex ].isFinished &&
 					canScheduleOperation(dpGraph, switches, links, paths, operations, dpGraph.mapID[ dpGraph.nodes[i].nodeID ]))
 					printf("Node %d can be scheduled now.\n", dpGraph.nodes[i].nodeID);
+					schedule(dpGraph, paths, operations, dpGraph.nodes[i].nodeIndex);
 			}
 		}
 

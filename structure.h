@@ -33,6 +33,7 @@ enum{ OP_ADD, OP_MOD, OP_DEL };
 typedef struct{
 	int dpID;			// ID for dependency graph
 	int operationType;	// Type of operation(add/mod/del)
+	int switchID;		// ID of switch this operation works on
 	bool isFinished;	// Mark the finish state of that operation
 }Operation;
 

@@ -49,6 +49,7 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches, vector<Lin
 				}
 			}
 			if(avTmp < 1e9) total += avTmp;
+			else avTmp = 0.0;
 			paths[ dpGraph.nodes[pDpID].nodeIndex ].available = avTmp;
 		}
 	}

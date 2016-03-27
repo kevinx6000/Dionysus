@@ -8,5 +8,6 @@
 #include "updateGraph.h"
 #include "calculateCPL.h"
 #include "canScheduleOperation.h"
+#include "schedule.h"
 
 #endif

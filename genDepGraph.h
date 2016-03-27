@@ -113,6 +113,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 					// Create operation node
 					otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 					otmp.operationType = OP_ADD;
+					otmp.switchID = sID1;
 					operations.push_back(otmp);
 					addOpID.push_back(otmp.dpID);
 
@@ -133,6 +134,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 					// Create operation node
 					otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 					otmp.operationType = OP_DEL;
+					otmp.switchID = sID1;
 					operations.push_back(otmp);
 					delOpID.push_back(otmp.dpID);
 
@@ -153,6 +155,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 				// Create operation node: in operation vector
 				otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 				otmp.operationType = OP_DEL;
+				otmp.switchID = sID1;
 				operations.push_back(otmp);
 				delOpID.push_back(otmp.dpID);
 
@@ -182,6 +185,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 				// Create operation node
 				otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 				otmp.operationType = OP_ADD;
+				otmp.switchID = sID2;
 				operations.push_back(otmp);
 				addOpID.push_back(otmp.dpID);
 
@@ -219,6 +223,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 			// Create operation node: in operation vector
 			otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 			otmp.operationType = OP_DEL;
+			otmp.switchID = sID1;
 			operations.push_back(otmp);
 			delOpID.push_back(otmp.dpID);
 
@@ -245,6 +250,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 			// Create operation node: in operation vector
 			otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 			otmp.operationType = OP_ADD;
+			otmp.switchID = sID2;
 			operations.push_back(otmp);
 			addOpID.push_back(otmp.dpID);
 
@@ -273,6 +279,7 @@ void genDependencyGraph(DPGraph &dpGraph, const vector<Flow> &allFlows, vector<S
 		// Ingress switch: modify (add new rule)
 		otmp.dpID = createNode(dpGraph, OPERATION, operations.size());
 		otmp.operationType = OP_MOD;
+		otmp.switchID = allFlows[i].traffic[0][ingID1].switchID;
 		operations.push_back(otmp);
 		/* Add op -> Mod op */
 		etmp.nodeID = otmp.dpID;
