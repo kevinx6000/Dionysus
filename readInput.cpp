@@ -1,12 +1,49 @@
-#ifndef READ_FLOW_H
-#define READ_FLOW_H
-
-// Headers
+// Header
 #include "header.h"
 #include "structure.h"
+#include "dionysus.h"
 
-// Read Flow
-void readFlow(vector<Flow> &allFlow){
+// Read topology
+void Dionysus::readTopo(void){
+
+	// Variables
+	int n;
+	int numPort;
+	int nxt;
+	Switch stmp;
+	Link ltmp;
+
+	// For each switch
+	scanf("%d", &n);
+	for(int id = 0; id < n; id++){
+
+		// Initialize
+		stmp.switchID = id;
+		stmp.tcamUsage = TCAM_CAPACITY;
+		ltmp.sourceID = id;
+		ltmp.linkCapacity = LINK_CAPACITY;
+
+		// For each port
+		scanf("%d", &numPort);
+		for(int port = 0; port < numPort; port++){
+			
+			// The switch ID of this port connects to
+			scanf("%d", &nxt);
+			stmp.port.push_back(nxt);
+			stmp.linkID.push_back(links.size());
+
+			// Link node
+			ltmp.destinationID = nxt;
+			links.push_back(ltmp);
+		}
+		switches.push_back(stmp);
+		stmp.port.clear();
+		stmp.linkID.clear();
+	}
+}
+
+// Read flow
+void Dionysus::readFlow(void){
 	
 	// Variables
 	int i;
@@ -51,4 +88,3 @@ void readFlow(vector<Flow> &allFlow){
 	}
 }
 
-#endif

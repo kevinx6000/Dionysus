@@ -1,18 +1,18 @@
 F = 
 CC = g++
-CFLAGS = -Wall $(F)
-SRCS = main.cpp
+CFLAGS = -c -Wall $(F)
+SRCS = main.cpp readInput.cpp genDepGraph.cpp debug.cpp
 OBJS = $(SRCS:.cpp=.o)
-EXEC = $(SRCS:.cpp=)
+EXEC = main
 TESTCASE = input.txt
 
-all: $(EXEC)
+all: $(SRCS) $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $< -o $@
+	$(CC) $(OBJS) -o $@
 
-%.o: %.cpp
-	$(CC) $< $(CFLAGS) -c
+.cpp.o:
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
 	@rm -rf $(EXEC) $(OBJS) *~
