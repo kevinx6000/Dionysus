@@ -40,7 +40,7 @@ void schedule(DPGraph &dpGraph, vector<Path> &paths, vector<Operation> &operatio
 		// Add rule with new version if traffic available > 0
 		if(addRule){
 			oaID = dpGraph.nodes[oaDpID].nodeIndex;
-			printf("Add new rule @ switch %d\n", operations[oaID].switchID);
+			printf("Add/Modify rule @ switch %d\n", operations[oaID].switchID);
 		}
 	}
 

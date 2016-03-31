@@ -130,11 +130,13 @@ bool canScheduleOperation(DPGraph &dpGraph, vector<Switch> &switches, vector<Lin
 					rDpID = dpGraph.mapID[ dpGraph.nodes[oaDpID].parent[j] ];
 					if(dpGraph.nodes[rDpID].nodeType == RES_SWITCH){
 
-						// Not enought TCAM
+						// Update the switch node
 						rID = dpGraph.nodes[rDpID].nodeIndex;
 						for(int k = 0; k < dpGraph.nodes[rDpID].child.size(); k++)
-							if(dpGraph.mapID[ dpGraph.nodes[rDpID].child[k].nodeID ] == oaDpID)
+							if(dpGraph.mapID[ dpGraph.nodes[rDpID].child[k].nodeID ] == oaDpID){
 								switches[rID].tcamUsage -= dpGraph.nodes[rDpID].child[k].intWeight;
+								dpGraph.nodes[rDpID].child[k].intWeight = 0;
+							}
 					}
 				}
 			}
