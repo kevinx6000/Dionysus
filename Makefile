@@ -1,8 +1,21 @@
-all: main
-	g++ -o main main.o
+F = 
+CC = g++
+CFLAGS = -Wall $(F)
+SRCS = main.cpp
+OBJS = $(SRCS:.cpp=.o)
+EXEC = $(SRCS:.cpp=)
+TESTCASE = input.txt
 
-main:
-	g++ -c main.cpp
+all: $(EXEC)
+
+$(EXEC): $(OBJS)
+	$(CC) $< -o $@
+
+%.o: %.cpp
+	$(CC) $< $(CFLAGS) -c
 
 clean:
-	rm -rf main *.o *~
+	@rm -rf $(EXEC) $(OBJS) *~
+
+run:
+	@./$(EXEC) < $(TESTCASE)

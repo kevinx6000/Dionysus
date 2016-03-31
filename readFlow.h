@@ -6,15 +6,17 @@
 #include "structure.h"
 
 // Read Flow
-void readFlow(vector<Flow> &allFlow, const vector<Switch> &switches){
-
+void readFlow(vector<Flow> &allFlow){
+	
 	// Variables
+	int i;
 	int numFlow;
-	int numSwitch;
-	double volume;
+	int numPath;
+	int numLink;
 	Flow ftmp;
-	SwitchINFO itmp;
-
+	FlowPath ptmp;
+	Link ltmp;
+	
 	// For each flow
 	scanf("%d", &numFlow);
 	while(numFlow--){
@@ -22,27 +24,30 @@ void readFlow(vector<Flow> &allFlow, const vector<Switch> &switches){
 		// Ingress switch
 		scanf("%d", &ftmp.ingressID);
 
-		// Initial and Final distribution
-		for(int d = 0; d < 2; d++){
+		// Number of paths
+		scanf("%d", &numPath);
+		while(numPath--){
 
-			// For each switch
-			scanf("%d", &numSwitch);
-			for(int sw = 0; sw < numSwitch; sw++){
+			// Traffic volume
+			scanf("%lf", &ptmp.traffic);
 
-				// Switch ID
-				scanf("%d", &itmp.switchID);
+			// Initial & Final path
+			for(i = 0; i < 2; i++){
 
-				// Ratio of each link
-				for(int lk = 0; lk < switches[itmp.switchID].port.size(); lk++){
-					scanf("%lf", &volume);
-					itmp.volume.push_back(volume);
+				// Number of links
+				scanf("%d", &numLink);
+				while(numLink--){
+
+					// Source to destination
+					scanf("%d%d", &ltmp.sourceID, &ltmp.destinationID);
+					ptmp.link[i].push_back(ltmp);
 				}
-				ftmp.traffic[d].push_back(itmp);
-				itmp.volume.clear();
 			}
+			ftmp.flowPath.push_back(ptmp);
+			for(i = 0; i < 2; i++) ptmp.link[i].clear();
 		}
 		allFlow.push_back(ftmp);
-		for(int d = 0; d < 2; d++) ftmp.traffic[d].clear();
+		ftmp.flowPath.clear();
 	}
 }
 

@@ -21,6 +21,19 @@ typedef struct{
 	double linkCapacity;// Link capacity
 }Link;
 
+// Flow Path
+typedef struct{
+	double traffic;
+	vector<Link>link[2];
+}FlowPath;
+
+// Flow
+typedef struct{
+	int ingressID;
+	vector<FlowPath>flowPath;
+}Flow;
+
+/*
 // Path node
 typedef struct{
 	int dpID;			// ID for dependency graph
@@ -72,5 +85,6 @@ typedef struct{
 	vector<Node>nodes;	// List of node in dependency graph
 	vector<int>mapID;	// Recording the mapping from 'actual ID' to 'current index'
 }DPGraph;
+*/
 
 #endif
