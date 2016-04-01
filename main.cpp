@@ -11,6 +11,9 @@ int main(void)
 	simulator.readTopo();
 	simulator.readFlow();
 
+	// Generate dependency graph
+	simulator.genDepGraph();
+
 	// Debug
 	simulator.debug();
 

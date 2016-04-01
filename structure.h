@@ -65,4 +65,14 @@ class Path{
 		double committed;	// Moved traffic on this path
 };
 
+// Operation node
+enum{ OP_ADD, OP_MOD, OP_DEL };
+class Operation{
+	public:
+		int dpID;			// ID for dependency graph
+		int operationType;	// Type of operation(add/mod/del)
+		int switchID;		// ID of switch this operation works on
+		bool isFinished;	// Mark the finish state of that operation
+};
+
 #endif
