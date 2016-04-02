@@ -112,7 +112,7 @@ void Dionysus::genDepGraph(void){
 					insertOpDEL(sID1);
 
 					/* Note: only the last path flow do not need this node (check @ scheduling) */
-					insertOpADD(sID1, pInDpID);
+					insertOpADD(sID1, pInDpID, traffic);
 					hasDiff = true;
 					ptr1++;
 				}
@@ -130,7 +130,7 @@ void Dionysus::genDepGraph(void){
 				insertOpDEL(sID1);
 				
 				/* Note: only the last path flow do not need this node (check @ scheduling) */
-				insertOpADD(sID1, pInDpID);
+				insertOpADD(sID1, pInDpID, traffic);
 				hasDiff = true;
 				ptr1++;
 			}

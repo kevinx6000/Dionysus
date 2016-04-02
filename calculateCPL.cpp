@@ -1,6 +1,3 @@
-#ifndef CALCULATE_CPL_H
-#define CALCULATE_CPL_H
-
 // Header
 #include "header.h"
 #include "structure.h"
@@ -49,4 +46,3 @@ bool Dionysus::calculateCPL(void){
 	}
 	return true;
 }
-#endif

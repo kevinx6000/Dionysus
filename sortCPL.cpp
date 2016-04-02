@@ -1,6 +1,3 @@
-#ifndef SORT_CPL_H
-#define SORT_CPL_H
-
 // Header
 #include "header.h"
 #include "structure.h"
@@ -21,5 +18,3 @@ void Dionysus::sortCPL(void){
 bool Dionysus::cmpCPL(Node A, Node B){
 	return A.CPL > B.CPL;
 }
-
-#endif

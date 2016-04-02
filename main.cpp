@@ -14,16 +14,8 @@ int main(void)
 	// Generate dependency graph
 	simulator.genDepGraph();
 
-	// Update dependency graph
-	simulator.updateGraph();
-
-	// Cycle exits when calculating CPL
-	if(!simulator.calculateCPL()) fprintf(stderr, "ERROR: cycle exists\n");
-	else{
-
-		// Sort with their CPL
-		simulator.sortCPL();
-	}
+	// Schedule update
+	simulator.schedule();
 
 	// DEBUG
 	simulator.debug();

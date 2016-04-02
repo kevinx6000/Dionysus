@@ -1,6 +1,3 @@
-#ifndef UPDATE_GRAPH_H
-#define UPDATE_GRAPH_H
-
 // Headers
 #include "header.h"
 #include "structure.h"
@@ -139,4 +136,3 @@ void Dionysus::updateGraph(void){
 		}
 	}
 }
-#endif

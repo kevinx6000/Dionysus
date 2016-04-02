@@ -11,9 +11,7 @@ class Dionysus{
 		void readTopo(void);					// Read topology
 		void readFlow(void);					// Read flow
 		void genDepGraph(void);					// Generate dependency graph
-		bool calculateCPL(void);				// Calculate the CPL in dependency graph
-		void updateGraph(void);					// Update current dependency graph
-		void sortCPL(void);						// Sort nodes according to their CPL
+		void schedule(void);					// Schedule update
 		void debug(void);						// For debugging
 	private:
 		vector<Switch>switches;					// Switch node
@@ -29,6 +27,10 @@ class Dionysus{
 		void releaseCap(int, int, int, double);	// Release link capacity (add dependency)
 		void insertOpADD(int, int, double=0);	// Insert OP_ADD node into dependency graph
 		void insertOpDEL(int);					// Insert OP_DEL node into dependency graph
+		void updateGraph(void);					// Update current dependency graph
+		bool calculateCPL(void);				// Calculate the CPL in dependency graph
+		void sortCPL(void);						// Sort nodes according to their CPL
+		bool canSchedule(int);					// Check if some operation o can be scheduled now
 		static bool cmpCPL(Node, Node);			// Comparison function for sorting CPL
 		int findDstPort(int, int);				// Find the port ID of destination switch
 		int createNode(int, int);				// Create node
