@@ -34,6 +34,7 @@ void Dionysus::genDepGraph(void){
 		otmp.dpID = owDpID = createNode(OPERATION, operations.size());
 		otmp.operationType = OP_MOD;
 		otmp.switchID = allFlow[i].ingressID;
+		otmp.isFinished = false;
 		operations.push_back(otmp);
 
 		// For each path
@@ -79,7 +80,7 @@ void Dionysus::genDepGraph(void){
 						
 						// Require capacity on sID2-dID2
 						requireCap(sID2, dID2, pInDpID, traffic);
-						insertOpADD(sID2, pInDpID);
+						insertOpADD(sID2, pInDpID, traffic);
 
 						// Release capacity on sID1-dID1
 						releaseCap(sID1, dID1, pOutDpID, traffic);
@@ -95,7 +96,7 @@ void Dionysus::genDepGraph(void){
 
 					// Require capacity on sID2-dID2
 					requireCap(sID2, dID2, pInDpID, traffic);
-					insertOpADD(sID2, pInDpID);
+					insertOpADD(sID2, pInDpID, traffic);
 
 					/* Note: only the first path flow do not need this node (check @ scheduling) */
 					insertOpDEL(sID2);
@@ -143,7 +144,7 @@ void Dionysus::genDepGraph(void){
 
 				// Require capacity on sID2-dID2
 				requireCap(sID2, dID2, pInDpID, traffic);
-				insertOpADD(sID2, pInDpID);
+				insertOpADD(sID2, pInDpID, traffic);
 
 				/* Note: only the first path flow do not need this node (check @ scheduling) */
 				insertOpDEL(sID2);
@@ -247,7 +248,7 @@ void Dionysus::releaseCap(int sID, int dID, int pOutDpID, double traffic){
 }
 
 // Insert OP_ADD node into dependency graph
-void Dionysus::insertOpADD(int sID, int pInDpID){
+void Dionysus::insertOpADD(int sID, int pInDpID, double traffic){
 
 	// Variables
 	Edge etmp;
@@ -257,6 +258,7 @@ void Dionysus::insertOpADD(int sID, int pInDpID){
 	otmp.dpID = createNode(OPERATION, operations.size());
 	otmp.operationType = OP_ADD;
 	otmp.switchID = sID;
+	otmp.isFinished = false;
 	operations.push_back(otmp);
 	addOpList.push_back(otmp.dpID);
 
@@ -268,7 +270,7 @@ void Dionysus::insertOpADD(int sID, int pInDpID){
 
 	// Add dependency link: Path -> Operation
 	etmp.nodeID = otmp.dpID;
-	etmp.intWeight = 1;
+	etmp.dobWeight = traffic;
 	nodes[pInDpID].child.push_back(etmp);
 	nodes[otmp.dpID].parent.push_back(pInDpID);
 }
@@ -284,6 +286,7 @@ void Dionysus::insertOpDEL(int sID){
 	otmp.dpID = createNode(OPERATION, operations.size());
 	otmp.operationType = OP_DEL;
 	otmp.switchID = sID;
+	otmp.isFinished = false;
 	operations.push_back(otmp);
 	delOpList.push_back(otmp.dpID);
 

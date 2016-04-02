@@ -119,4 +119,11 @@ void Dionysus::debug(void){
 		fprintf(stderr, "\n");
 	}
 	#endif
+
+	// CPL
+	#ifdef CALCPL
+	for(int i = 0; i < (int)nodes.size(); i++){
+		fprintf(stderr, "Node ID = %d, CPL = %d\n", nodes[i].nodeID, nodes[i].CPL);
+	}
+	#endif
 }
