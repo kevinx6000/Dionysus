@@ -49,5 +49,4 @@ bool Dionysus::calculateCPL(void){
 	}
 	return true;
 }
-
 #endif
