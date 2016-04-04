@@ -19,7 +19,6 @@ bool Dionysus::canSchedule(int owDpID){
 
 	// Check link capacity resource
 	total = 0.0;
-	/* TODO: What if NO OP ADD as parent...? i.e., parent.size() = 0 */
 	oaDpID = mapID[ nodes[owDpID].parent[0] ];
 	for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
 
@@ -58,27 +57,20 @@ bool Dionysus::canSchedule(int owDpID){
 	if(total > 0.0) canSchedule = true;
 
 	// Check switch memeory resource
-	for(int i = 0; i < (int)nodes[owDpID].parent.size(); i++){
+	oaDpID = mapID[ nodes[owDpID].parent[0] ];
+	for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
 
-		// Operation nodes
-		oaDpID = mapID[ nodes[owDpID].parent[i] ];
-		if(nodes[oaDpID].nodeType == OPERATION){
+		// Switch
+		rDpID = mapID[ nodes[oaDpID].parent[i] ];
+		if(nodes[rDpID].nodeType == RES_SWITCH){
 
-			// Resource nodes
-			for(int j = 0; j < (int)nodes[oaDpID].parent.size(); j++){
-
-				// Switch
-				rDpID = mapID[ nodes[oaDpID].parent[j] ];
-				if(nodes[rDpID].nodeType == RES_SWITCH){
-
-					// Not enought TCAM
-					rID = nodes[rDpID].nodeIndex;
-					for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-						if(mapID[ nodes[rDpID].child[k].nodeID ] == oaDpID &&
-							switches[rID].tcamUsage < nodes[rDpID].child[k].intWeight)
-							canSchedule = false;
-				}
-			}
+			// Not enought TCAM
+			rID = nodes[rDpID].nodeIndex;
+			for(int j = 0; j < (int)nodes[rDpID].child.size(); j++)
+				/* TODO: Here we should check if it really add a rule to switch */
+				if(mapID[ nodes[rDpID].child[j].nodeID ] == oaDpID &&
+					switches[rID].tcamUsage < nodes[rDpID].child[j].intWeight)
+						canSchedule = false;
 		}
 	}
 
@@ -120,28 +112,19 @@ bool Dionysus::canSchedule(int owDpID){
 		}
 
 		// Update switch memory resource
-		for(int i = 0; i < (int)nodes[owDpID].parent.size(); i++){
+		oaDpID = mapID[ nodes[owDpID].parent[0] ];
+		for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
 
-			// Operation nodes
-			oaDpID = mapID[ nodes[owDpID].parent[i] ];
-			if(nodes[oaDpID].nodeType == OPERATION){
+			// Switch
+			rDpID = mapID[ nodes[oaDpID].parent[i] ];
+			if(nodes[rDpID].nodeType == RES_SWITCH){
 
-				// Resource nodes
-				for(int j = 0; j < (int)nodes[oaDpID].parent.size(); j++){
-
-					// Switch
-					rDpID = mapID[ nodes[oaDpID].parent[j] ];
-					if(nodes[rDpID].nodeType == RES_SWITCH){
-
-						// Update the switch node
-						rID = nodes[rDpID].nodeIndex;
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == oaDpID){
-								switches[rID].tcamUsage -= nodes[rDpID].child[k].intWeight;
-//								nodes[rDpID].child[k].intWeight = 0;
-							}
-					}
-				}
+				// Update the switch node
+				rID = nodes[rDpID].nodeIndex;
+				for(int j = 0; j < (int)nodes[rDpID].child.size(); j++)
+					/* TODO: Here we should check if it really add a rule to switch */
+					if(mapID[ nodes[rDpID].child[j].nodeID ] == oaDpID)
+						switches[rID].tcamUsage -= nodes[rDpID].child[j].intWeight;
 			}
 		}
 
@@ -154,6 +137,7 @@ bool Dionysus::canSchedule(int owDpID){
 
 				// Committed traffic
 				pID = nodes[pDpID].nodeIndex;
+				/* TODO: I don't think this is correct... each path must move independently */
 				paths[pID].committed = min(nodes[owDpID].child[i].dobWeight, total);
 				nodes[owDpID].child[i].dobWeight -= paths[pID].committed;
 				total -= paths[pID].committed;
