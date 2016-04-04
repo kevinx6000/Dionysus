@@ -16,11 +16,12 @@ void Dionysus::updateGraph(void){
 			// Delete operation
 			if(operations[ nodes[i].nodeIndex ].operationType == OP_DEL ){
 
-				// Update resource (only one child: switch)
-				rDpID = mapID[ nodes[i].child[0].nodeID ];
-				switches[ nodes[rDpID].nodeIndex ].tcamUsage += nodes[i].child[0].intWeight;
-
-				/* TODO: May be we should check if delete operation is actually done or not */
+				// Update all switches' memory
+				for(int j = 0; j < (int)nodes[i].child.size(); j++){
+					rDpID = mapID[ nodes[i].child[j].nodeID ];
+					/* TODO: May be we should check if delete operation is actually done or not */
+					switches[ nodes[rDpID].nodeIndex ].tcamUsage += nodes[i].child[j].intWeight;
+				}
 			}
 
 			// Change weight operation
@@ -59,10 +60,10 @@ void Dionysus::updateGraph(void){
 				// Finish: all paths and operations done
 				if(nodes[i].child.size() == 0){
 
-					// Delete all its parents
+					// Delete all its parents (only one parent node: Op ADD)
 					for(int j = 0; j < (int)nodes[i].parent.size(); j++){
 
-						// And edges from parent to this node
+						// And edges from parent to this node (only one child node: Op MOD)
 						oaDpID = mapID[ nodes[i].parent[j] ];
 						for(int k = 0; k < (int)nodes[oaDpID].child.size(); k++){
 							if(nodes[oaDpID].child[k].nodeID == nodes[i].nodeID){

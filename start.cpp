@@ -8,7 +8,7 @@ void Dionysus::start(void){
 
 	// Update dependency graph
 	updateGraph();
-	
+/*	
 	// Cycle exits when calculating CPL
 	if(!calculateCPL()) fprintf(stderr, "ERROR: cycle exists\n");
 	else{
@@ -21,4 +21,5 @@ void Dionysus::start(void){
 			if(canSchedule(mapID[ nodes[i].nodeID ]))
 				fprintf(stderr, "Node %d is ready for scheduled.\n", nodes[i].nodeID);
 	}
+*/
 }
