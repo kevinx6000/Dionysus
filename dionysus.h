@@ -22,12 +22,8 @@ class Dionysus{
 		vector<Flow>allFlow;					// All flows
 		vector<Node>nodes;						// List of node in dependency graph
 		vector<int>mapID;						// Record the mapping from 'actual ID' to 'current index'
-		vector<int>addOpList;					// List of current Op ADD ID
-		vector<int>delOpList;					// List of current Op DEL ID
 		void requireCap(int, int, int, double);	// Require link capacity (add dependency)
 		void releaseCap(int, int, int, double);	// Release link capacity (add dependency)
-		void insertOpADD(int, int, double=0);	// Insert OP_ADD node into dependency graph
-		void insertOpDEL(int);					// Insert OP_DEL node into dependency graph
 		void updateGraph(void);					// Update current dependency graph
 		bool calculateCPL(void);				// Calculate the CPL in dependency graph
 		void sortCPL(void);						// Sort nodes according to their CPL

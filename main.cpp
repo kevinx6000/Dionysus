@@ -15,7 +15,7 @@ int main(void)
 	simulator.genDepGraph();
 
 	// Schedule update
-	simulator.start();
+//	simulator.start();
 
 	// DEBUG
 	simulator.debug();

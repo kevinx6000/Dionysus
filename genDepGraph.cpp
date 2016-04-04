@@ -7,7 +7,7 @@
 void Dionysus::genDepGraph(void){
 
 	// Variables
-	int pInDpID, pOutDpID, sID1, sID2, dID1, dID2, owDpID, ingPtr1, ingPtr2;
+	int pInDpID, pOutDpID, sID1, sID2, dID1, dID2, owDpID, oaDpID, odDpID, ingPtr1, ingPtr2;
 	int ptr1, ptr2, siz1, siz2;
 	bool hasDiff;
 	double traffic;
@@ -26,9 +26,11 @@ void Dionysus::genDepGraph(void){
 	// For each flow
 	for(int i = 0; i < (int)allFlow.size(); i++){
 
-		// Clear ADD/DEL node vector
-		addOpList.clear();
-		delOpList.clear();
+		// Create Op ADD node
+		otmp.dpID = oaDpID = createNode(OPERATION, operations.size());
+		otmp.operationType = OP_ADD;
+		otmp.isFinished = false;
+		operations.push_back(otmp);
 
 		// Create Op MOD node
 		otmp.dpID = owDpID = createNode(OPERATION, operations.size());
@@ -36,6 +38,22 @@ void Dionysus::genDepGraph(void){
 		otmp.switchID = allFlow[i].ingressID;
 		otmp.isFinished = false;
 		operations.push_back(otmp);
+
+		// Create Op DEL node
+		otmp.dpID = odDpID = createNode(OPERATION, operations.size());
+		otmp.operationType = OP_DEL;
+		otmp.isFinished = false;
+		operations.push_back(otmp);
+
+		// Add dependency link: Op ADD -> Op MOD
+		etmp.nodeID = owDpID;
+		nodes[oaDpID].child.push_back(etmp);
+		nodes[owDpID].parent.push_back(oaDpID);
+
+		// Add dependency link: Op MOD -> Op DEL
+		etmp.nodeID = odDpID;
+		nodes[owDpID].child.push_back(etmp);
+		nodes[odDpID].parent.push_back(owDpID);
 
 		// For each path
 		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++){
@@ -78,13 +96,22 @@ void Dionysus::genDepGraph(void){
 					// New port
 					if(dID1 != dID2){
 						
-						// Require capacity on sID2-dID2
+						// Require/Release capacity on sID2-dID2/sID1-dID1
 						requireCap(sID2, dID2, pInDpID, traffic);
-						insertOpADD(sID2, pInDpID, traffic);
-
-						// Release capacity on sID1-dID1
 						releaseCap(sID1, dID1, pOutDpID, traffic);
-						insertOpDEL(sID1);
+
+						// Add dependency link: Switch -> Op ADD
+						etmp.nodeID = oaDpID;
+						etmp.intWeight = 1;
+						nodes[switches[sID1].dpID].child.push_back(etmp);
+						nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+
+						// Add dependency link: Op DEL -> Switch
+						etmp.nodeID = switches[sID1].dpID;
+						etmp.intWeight = 1;
+						nodes[odDpID].child.push_back(etmp);
+						nodes[switches[sID1].dpID].parent.push_back(odDpID);
+
 						hasDiff = true;
 					}
 					ptr1++;
@@ -96,10 +123,19 @@ void Dionysus::genDepGraph(void){
 
 					// Require capacity on sID2-dID2
 					requireCap(sID2, dID2, pInDpID, traffic);
-					insertOpADD(sID2, pInDpID, traffic);
 
-					/* Note: only the first path flow do not need this node (check @ scheduling) */
-					insertOpDEL(sID2);
+					// Add dependency link: Switch -> Op ADD
+					etmp.nodeID = oaDpID;
+					etmp.intWeight = 1;
+					nodes[switches[sID2].dpID].child.push_back(etmp);
+					nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+
+					// Add dependency link: Op DEL -> Switch
+					etmp.nodeID = switches[sID2].dpID;
+					etmp.intWeight = 1;
+					nodes[odDpID].child.push_back(etmp);
+					nodes[switches[sID2].dpID].parent.push_back(odDpID);
+
 					hasDiff = true;
 					ptr2++;
 				}
@@ -109,10 +145,19 @@ void Dionysus::genDepGraph(void){
 
 					// Release capacity on sID1-dID1
 					releaseCap(sID1, dID1, pOutDpID, traffic);
-					insertOpDEL(sID1);
 
-					/* Note: only the last path flow do not need this node (check @ scheduling) */
-					insertOpADD(sID1, pInDpID, traffic);
+					// Add dependency link: Switch -> Op ADD
+					etmp.nodeID = oaDpID;
+					etmp.intWeight = 1;
+					nodes[switches[sID1].dpID].child.push_back(etmp);
+					nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+
+					// Add dependency link: Op DEL -> Switch
+					etmp.nodeID = switches[sID1].dpID;
+					etmp.intWeight = 1;
+					nodes[odDpID].child.push_back(etmp);
+					nodes[switches[sID1].dpID].parent.push_back(odDpID);
+
 					hasDiff = true;
 					ptr1++;
 				}
@@ -127,10 +172,19 @@ void Dionysus::genDepGraph(void){
 
 				// Release capacity on sID1-dID1
 				releaseCap(sID1, dID1, pOutDpID, traffic);
-				insertOpDEL(sID1);
-				
-				/* Note: only the last path flow do not need this node (check @ scheduling) */
-				insertOpADD(sID1, pInDpID, traffic);
+
+				// Add dependency link: Switch -> Op ADD
+				etmp.nodeID = oaDpID;
+				etmp.intWeight = 1;
+				nodes[switches[sID1].dpID].child.push_back(etmp);
+				nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+
+				// Add dependency link: Op DEL -> Switch
+				etmp.nodeID = switches[sID1].dpID;
+				etmp.intWeight = 1;
+				nodes[odDpID].child.push_back(etmp);
+				nodes[switches[sID1].dpID].parent.push_back(odDpID);
+
 				hasDiff = true;
 				ptr1++;
 			}
@@ -144,10 +198,19 @@ void Dionysus::genDepGraph(void){
 
 				// Require capacity on sID2-dID2
 				requireCap(sID2, dID2, pInDpID, traffic);
-				insertOpADD(sID2, pInDpID, traffic);
 
-				/* Note: only the first path flow do not need this node (check @ scheduling) */
-				insertOpDEL(sID2);
+				// Add dependency link: Switch -> Op ADD
+				etmp.nodeID = oaDpID;
+				etmp.intWeight = 1;
+				nodes[switches[sID2].dpID].child.push_back(etmp);
+				nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+
+				// Add dependency link: Op DEL -> Switch
+				etmp.nodeID = switches[sID2].dpID;
+				etmp.intWeight = 1;
+				nodes[odDpID].child.push_back(etmp);
+				nodes[switches[sID2].dpID].parent.push_back(odDpID);
+
 				hasDiff = true;
 				ptr2++;
 			}
@@ -166,26 +229,21 @@ void Dionysus::genDepGraph(void){
 				hasDiff = true;
 			}
 
-			// Add link dependency: Operation MOD -> PathOut
+			// Traffic has difference
 			if(hasDiff){
+
+				// Add dependency link: PathIn -> Op ADD
+				etmp.nodeID = oaDpID;
+				etmp.dobWeight = traffic;
+				nodes[pInDpID].child.push_back(etmp);
+				nodes[oaDpID].parent.push_back(pInDpID);
+
+				// Add dependency link: Op MOD -> PathOut
 				etmp.nodeID = pOutDpID;
+				/* Weight?? */
 				nodes[owDpID].child.push_back(etmp);
 				nodes[pOutDpID].parent.push_back(owDpID);
 			}
-		}
-
-		// Add link dependency: Operation ADD -> Operation MOD
-		for(int j = 0; j < (int)addOpList.size(); j++){
-			etmp.nodeID = owDpID;
-			nodes[addOpList[j]].child.push_back(etmp);
-			nodes[owDpID].parent.push_back(addOpList[j]);
-		}
-
-		// Add link dependency: Operation MOD -> Operation DEL
-		for(int j = 0; j < (int)delOpList.size(); j++){
-			etmp.nodeID = delOpList[j];
-			nodes[owDpID].child.push_back(etmp);
-			nodes[delOpList[j]].parent.push_back(owDpID);
 		}
 	}
 }
@@ -245,56 +303,6 @@ void Dionysus::releaseCap(int sID, int dID, int pOutDpID, double traffic){
 		nodes[pOutDpID].child.push_back(etmp);
 		nodes[rID].parent.push_back(pOutDpID);
 	}
-}
-
-// Insert OP_ADD node into dependency graph
-void Dionysus::insertOpADD(int sID, int pInDpID, double traffic){
-
-	// Variables
-	Edge etmp;
-	Operation otmp;
-
-	// Add operation node: OP_ADD @ sID
-	otmp.dpID = createNode(OPERATION, operations.size());
-	otmp.operationType = OP_ADD;
-	otmp.switchID = sID;
-	otmp.isFinished = false;
-	operations.push_back(otmp);
-	addOpList.push_back(otmp.dpID);
-
-	// Add dependency link: Switch -> Operation
-	etmp.nodeID = otmp.dpID;
-	etmp.intWeight = 1;
-	nodes[switches[sID].dpID].child.push_back(etmp);
-	nodes[otmp.dpID].parent.push_back(switches[sID].dpID);
-
-	// Add dependency link: Path -> Operation
-	etmp.nodeID = otmp.dpID;
-	etmp.dobWeight = traffic;
-	nodes[pInDpID].child.push_back(etmp);
-	nodes[otmp.dpID].parent.push_back(pInDpID);
-}
-
-// Insert OP_DEL node into dependency graph
-void Dionysus::insertOpDEL(int sID){
-
-	// Variables
-	Edge etmp;
-	Operation otmp;
-
-	// Add operation node: OP_DEL @ sID
-	otmp.dpID = createNode(OPERATION, operations.size());
-	otmp.operationType = OP_DEL;
-	otmp.switchID = sID;
-	otmp.isFinished = false;
-	operations.push_back(otmp);
-	delOpList.push_back(otmp.dpID);
-
-	// Add dependency link: Operation -> Switch
-	etmp.nodeID = switches[sID].dpID;
-	etmp.intWeight = 1;
-	nodes[otmp.dpID].child.push_back(etmp);
-	nodes[switches[sID].dpID].parent.push_back(otmp.dpID);
 }
 
 // Find out port of destination switch dID @ switch sID
