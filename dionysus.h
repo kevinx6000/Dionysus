@@ -11,7 +11,8 @@ class Dionysus{
 		void readTopo(void);					// Read topology
 		void readFlow(void);					// Read flow
 		void genDepGraph(void);					// Generate dependency graph
-		void schedule(void);					// Schedule update
+		void schedule(int);						// Schedule operation Oi
+		void start(void);						// Start scheduling
 		void debug(void);						// For debugging
 	private:
 		vector<Switch>switches;					// Switch node
