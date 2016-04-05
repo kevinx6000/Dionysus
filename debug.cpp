@@ -6,6 +6,12 @@
 // Debugging function
 void Dionysus::debug(void){
 
+	// Links
+	#ifdef LINKS
+	for(int i = 0; i < (int)links.size(); i++)
+		fprintf(stderr, "%d to %d, initial = %.2lf\n", links[i].sourceID, links[i].destinationID, links[i].curTraffic);
+	#endif
+
 	// Flow
 	#ifdef FLOW
 	for(int i = 0; i < (int)allFlow.size(); i++){

@@ -50,13 +50,18 @@ void Dionysus::readFlow(void){
 	int numFlow;
 	int numPath;
 	int numLink;
+	int portID;
 	Flow ftmp;
 	FlowPath ptmp;
 	Link ltmp;
 	
 	// For each flow
 	scanf("%d", &numFlow);
-	while(numFlow--){
+	for(int fID = 0; fID < numFlow; fID++){
+
+		// Initialize link traffic of every flow
+		for(i = 0; i < (int)links.size(); i++)
+			links[i].curTraffic.push_back(0.0);
 
 		// Ingress switch
 		scanf("%d", &ftmp.ingressID);
@@ -77,6 +82,23 @@ void Dionysus::readFlow(void){
 
 					// Source to destination
 					scanf("%d%d", &ltmp.sourceID, &ltmp.destinationID);
+
+					// Initial traffic 
+					if(!i){
+
+						// Update this link with initial traffic
+						portID = findDstPort(ltmp.sourceID, ltmp.destinationID);
+						if(portID != -1)
+							links[ switches[ltmp.sourceID].linkID[portID] ].curTraffic[fID] += ptmp.traffic;
+
+						// Exception
+						else{
+							fprintf(stderr, "Error: no such port exists.\n");
+							exit(1);
+						}
+					}
+
+					// Record the path
 					ptmp.link[i].push_back(ltmp);
 				}
 			}

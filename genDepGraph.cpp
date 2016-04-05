@@ -36,6 +36,7 @@ void Dionysus::genDepGraph(void){
 		otmp.dpID = owDpID = createNode(OPERATION, operations.size());
 		otmp.operationType = OP_MOD;
 		otmp.switchID = allFlow[i].ingressID;
+		otmp.flowID = i;
 		otmp.isFinished = false;
 		operations.push_back(otmp);
 
@@ -63,9 +64,15 @@ void Dionysus::genDepGraph(void){
 
 			// Create path nodes
 			ptmp.dpID = pInDpID  = createNode(PATH, paths.size());
+			ptmp.flowPathID = j;
 			paths.push_back(ptmp);
 			ptmp.dpID = pOutDpID = createNode(PATH, paths.size());
+			ptmp.flowPathID = j;
 			paths.push_back(ptmp);
+
+			// Pair ID
+			paths[ nodes[pInDpID].nodeIndex ].pairID = nodes[pOutDpID].nodeIndex;
+			paths[ nodes[pOutDpID].nodeIndex ].pairID = nodes[pInDpID].nodeIndex;
 
 			// Compare initial & final distribution
 			hasDiff = false;

@@ -56,6 +56,8 @@ bool Dionysus::canSchedule(int owDpID){
 	// Some flow can be move right now
 	if(total > 0.0) canSchedule = true;
 
+	/* TODO: Calculate the add/delete rule count, and generate the rules, store @ operation change node */
+
 	// Check switch memeory resource
 	oaDpID = mapID[ nodes[owDpID].parent[0] ];
 	for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
@@ -137,8 +139,7 @@ bool Dionysus::canSchedule(int owDpID){
 
 				// Committed traffic
 				pID = nodes[pDpID].nodeIndex;
-				/* TODO: I don't think this is correct... each path must move independently */
-				paths[pID].committed = min(nodes[owDpID].child[i].dobWeight, total);
+				paths[pID].committed = min(nodes[owDpID].child[i].dobWeight, paths[ paths[pID].pairID ].available);
 				nodes[owDpID].child[i].dobWeight -= paths[pID].committed;
 				total -= paths[pID].committed;
 			}

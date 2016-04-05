@@ -21,6 +21,7 @@ class Link{
 		int sourceID;		// Source switch ID
 		int destinationID;	// Destination switch ID
 		double linkCapacity;// Link capacity
+		vector<double>curTraffic;	// Current traffic of this link of some flow
 };
 
 // Flow path
@@ -63,6 +64,8 @@ class Path{
 		int dpID;			// ID for dependency graph
 		double available;	// Available traffic for movement
 		double committed;	// Moved traffic on this path
+		int pairID;			// ID for pair of path node (pIn<>pOut)
+		int flowPathID;		// ID for corresponding flowPath of some flow
 };
 
 // Operation node
@@ -72,6 +75,7 @@ class Operation{
 		int dpID;			// ID for dependency graph
 		int operationType;	// Type of operation(add/mod/del)
 		int switchID;		// ID of switch this operation works on
+		int flowID;			// ID of flow this operation works on
 		bool isFinished;	// Mark the finish state of that operation
 };
 

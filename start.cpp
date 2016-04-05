@@ -19,6 +19,6 @@ void Dionysus::start(void){
 		// Check if some operation is ready for scheduled
 		for(int i = 0; i < (int)nodes.size(); i++)
 			if(canSchedule(mapID[ nodes[i].nodeID ]))
-				fprintf(stderr, "Node %d is ready for scheduled.\n", nodes[i].nodeID);
+				schedule(mapID[ nodes[i].nodeID ]);
 	}
 }
