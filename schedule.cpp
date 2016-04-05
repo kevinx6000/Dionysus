@@ -13,6 +13,15 @@ void Dionysus::schedule(int owDpID){
 	double traffic;
 	vector<double>preTraffic;
 
+	int oaID = nodes[ mapID[ nodes[owDpID].parent[0] ] ].nodeIndex;
+	for(int i = 0; i < (int)operations[oaID].ruleSet.size(); i++){
+		fprintf(stderr, "@ switch %d:", operations[oaID].ruleSet[i].switchID);
+		for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
+			fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]);
+		fprintf(stderr, "\n");
+	}
+	/* TODO: schedule updates according to rule set inside operation nodes */
+/*
 	// Record the traffic distribution of this flow before update on all links
 	fID = operations[ nodes[owDpID].nodeIndex ].flowID;
 	for(int i = 0; i < (int)links.size(); i++)
@@ -117,4 +126,5 @@ void Dionysus::schedule(int owDpID){
 				fprintf(stderr, "Delete old rule @ switch %d\n", i);
 		}
 	}
+	*/
 }

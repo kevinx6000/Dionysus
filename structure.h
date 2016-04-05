@@ -68,6 +68,15 @@ class Path{
 		int flowPathID;		// ID for corresponding flowPath of some flow
 };
 
+// Rule set
+enum{ RULE_ADD, RULE_MOD, RULE_DEL };
+class Rule{
+	public:
+		int switchID;			// Switch ID of this rule
+		int ruleType;			// Rule type (add/mod/del)
+		vector<double>traffic;	// Traffic for each port on this switch
+};
+
 // Operation node
 enum{ OP_ADD, OP_MOD, OP_DEL };
 class Operation{
@@ -77,6 +86,7 @@ class Operation{
 		int switchID;		// ID of switch this operation works on
 		int flowID;			// ID of flow this operation works on
 		bool isFinished;	// Mark the finish state of that operation
+		vector<Rule>ruleSet;// Rule set
 };
 
 #endif
