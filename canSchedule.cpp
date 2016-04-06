@@ -21,7 +21,8 @@ bool Dionysus::canSchedule(int owDpID){
 	// We only check for weight change operations
 	owID = nodes[owDpID].nodeIndex;
 	if(nodes[owDpID].nodeType != OPERATION || 
-			operations[owID].operationType != OP_MOD) return false;
+			operations[owID].operationType != OP_MOD ||
+			operations[owID].isFinished) return false;
 	canSchedule = false;
 
 	// Check link capacity resource
@@ -262,7 +263,7 @@ bool Dionysus::canSchedule(int owDpID){
 			if(rID != -1) switches[rID].tcamUsage--;
 		}
 
-		// Update the children of change weight operation
+		// Record the committed traffic
 		cID = 0;
 		for(int i = 0; i < (int)nodes[owDpID].child.size(); i++){
 
@@ -273,8 +274,6 @@ bool Dionysus::canSchedule(int owDpID){
 				// Committed traffic
 				pID = nodes[pDpID].nodeIndex;
 				paths[pID].committed = commitTmp[cID++];
-				nodes[owDpID].child[i].dobWeight -= paths[pID].committed;
-				total -= paths[pID].committed;
 			}
 		}
 
