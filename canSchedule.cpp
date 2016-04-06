@@ -68,8 +68,6 @@ bool Dionysus::canSchedule(int owDpID){
 
 		// Temporary committed traffic on each paths
 		for(int i = 0; i < (int)nodes[owDpID].child.size(); i++){
-
-			// Path nodes
 			pDpID = mapID[ nodes[owDpID].child[i].nodeID ];
 			if(nodes[pDpID].nodeType == PATH){
 
@@ -91,9 +89,9 @@ bool Dionysus::canSchedule(int owDpID){
 		for(int i = 0; i < (int)nodes[owDpID].child.size(); i++){
 			pDpID = mapID[ nodes[owDpID].child[i].nodeID ];
 			if(nodes[pDpID].nodeType == PATH){
-				pID = nodes[pDpID].nodeIndex;
 
 				// Corresponding flow
+				pID = nodes[pDpID].nodeIndex;
 				fpID = paths[pID].flowPathID;
 				traffic = commitTmp[cID++];
 
@@ -201,9 +199,10 @@ bool Dionysus::canSchedule(int owDpID){
 		rID = -1;
 		for(int j = 0; j < (int)nodes[oaDpID].parent.size(); j++){
 			rDpID = mapID[ nodes[oaDpID].parent[j] ];
-			if(nodes[rDpID].nodeType == RES_SWITCH){
-				rID = nodes[rDpID].nodeIndex;
-				if(switches[rID].switchID == addRules[i].switchID) break;
+			if(nodes[rDpID].nodeType == RES_SWITCH && 
+				switches[nodes[rDpID].nodeIndex].switchID == addRules[i].switchID){
+					rID = nodes[rDpID].nodeIndex;
+					break;
 			}
 		}
 		if(rID != -1 && switches[rID].tcamUsage < 1) canSchedule = false;
@@ -254,9 +253,10 @@ bool Dionysus::canSchedule(int owDpID){
 			rID = -1;
 			for(int j = 0; j < (int)nodes[oaDpID].parent.size(); j++){
 				rDpID = mapID[ nodes[oaDpID].parent[j] ];
-				if(nodes[rDpID].nodeType == RES_SWITCH){
-					rID = nodes[rDpID].nodeIndex;
-					if(switches[rID].switchID == addRules[i].switchID) break;
+				if(nodes[rDpID].nodeType == RES_SWITCH &&
+					switches[nodes[rDpID].nodeIndex].switchID == addRules[i].switchID){
+						rID = nodes[rDpID].nodeIndex;
+						break;
 				}
 			}
 			if(rID != -1) switches[rID].tcamUsage--;
@@ -278,18 +278,26 @@ bool Dionysus::canSchedule(int owDpID){
 			}
 		}
 
-		// Push all three ruleset into operation nodes
+		// Operation IDs
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];
-		operations[ nodes[oaDpID].nodeIndex ].ruleSet = addRules;
-		operations[ nodes[owDpID].nodeIndex ].ruleSet.clear();
-		operations[ nodes[owDpID].nodeIndex ].ruleSet.push_back(modRule);
 		for(int i = 0; i < (int)nodes[owDpID].child.size(); i++){
 			if(nodes[ mapID[ nodes[owDpID].child[i].nodeID ] ].nodeType == OPERATION){
 				odDpID = mapID[ nodes[owDpID].child[i].nodeID ];
 				break;
 			}
 		}
-		operations[ nodes[odDpID].nodeIndex ].ruleSet = delRules;
+
+		// Clear previous operation ruleset
+		operations[ nodes[oaDpID].nodeIndex ].ruleSet.clear();
+		operations[ nodes[owDpID].nodeIndex ].ruleSet.clear();
+		operations[ nodes[odDpID].nodeIndex ].ruleSet.clear();
+
+		// Push all three ruleset into operation nodes (if at least one add/del exisits)
+		if(addRules.size() > 0 || delRules.size() > 0){
+			operations[ nodes[oaDpID].nodeIndex ].ruleSet = addRules;
+			operations[ nodes[owDpID].nodeIndex ].ruleSet.push_back(modRule);
+			operations[ nodes[odDpID].nodeIndex ].ruleSet = delRules;
+		}
 	}
 	
 	// Return can be scheduling or not

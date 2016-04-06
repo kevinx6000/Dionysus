@@ -110,12 +110,14 @@ void Dionysus::genDepGraph(void){
 						// Add dependency link: Switch -> Op ADD
 						etmp.nodeID = oaDpID;
 						etmp.intWeight = 1;
+						/* Fake link weight: we update switch resource according to actual expense */
 						nodes[switches[sID1].dpID].child.push_back(etmp);
 						nodes[oaDpID].parent.push_back(switches[sID1].dpID);
 
 						// Add dependency link: Op DEL -> Switch
 						etmp.nodeID = switches[sID1].dpID;
 						etmp.intWeight = 1;
+						/* Fake link weight: we update switch resource according to actual expense */
 						nodes[odDpID].child.push_back(etmp);
 						nodes[switches[sID1].dpID].parent.push_back(odDpID);
 
@@ -156,12 +158,14 @@ void Dionysus::genDepGraph(void){
 					// Add dependency link: Switch -> Op ADD
 					etmp.nodeID = oaDpID;
 					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
 					nodes[switches[sID1].dpID].child.push_back(etmp);
 					nodes[oaDpID].parent.push_back(switches[sID1].dpID);
 
 					// Add dependency link: Op DEL -> Switch
 					etmp.nodeID = switches[sID1].dpID;
 					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
 					nodes[odDpID].child.push_back(etmp);
 					nodes[switches[sID1].dpID].parent.push_back(odDpID);
 
@@ -183,12 +187,14 @@ void Dionysus::genDepGraph(void){
 				// Add dependency link: Switch -> Op ADD
 				etmp.nodeID = oaDpID;
 				etmp.intWeight = 1;
+				/* Fake link weight: we update switch resource according to actual expense */
 				nodes[switches[sID1].dpID].child.push_back(etmp);
 				nodes[oaDpID].parent.push_back(switches[sID1].dpID);
 
 				// Add dependency link: Op DEL -> Switch
 				etmp.nodeID = switches[sID1].dpID;
 				etmp.intWeight = 1;
+				/* Fake link weight: we update switch resource according to actual expense */
 				nodes[odDpID].child.push_back(etmp);
 				nodes[switches[sID1].dpID].parent.push_back(odDpID);
 
@@ -209,12 +215,14 @@ void Dionysus::genDepGraph(void){
 				// Add dependency link: Switch -> Op ADD
 				etmp.nodeID = oaDpID;
 				etmp.intWeight = 1;
+				/* Fake link weight: we update switch resource according to actual expense */
 				nodes[switches[sID2].dpID].child.push_back(etmp);
 				nodes[oaDpID].parent.push_back(switches[sID2].dpID);
 
 				// Add dependency link: Op DEL -> Switch
 				etmp.nodeID = switches[sID2].dpID;
 				etmp.intWeight = 1;
+				/* Fake link weight: we update switch resource according to actual expense */
 				nodes[odDpID].child.push_back(etmp);
 				nodes[switches[sID2].dpID].parent.push_back(odDpID);
 
