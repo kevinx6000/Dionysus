@@ -9,7 +9,7 @@ bool Dionysus::canSchedule(int owDpID){
 	// Variables
 	int owID, oaDpID, odDpID, pDpID, pID, rDpID, rID;
 	int fID, fpID, sID, dID, portID, ingID, cID;
-	bool canSchedule, isZero, isChanged;
+	bool canSchedule, isZero, isChanged, hasPathParent;
 	double total, avTmp, traffic;
 	vector<double>preTraffic;
 	vector<double>curTraffic;
@@ -27,12 +27,16 @@ bool Dionysus::canSchedule(int owDpID){
 
 	// Check link capacity resource
 	total = 0.0;
+	hasPathParent = false;
 	oaDpID = mapID[ nodes[owDpID].parent[0] ];
 	for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
 
 		// Path nodes
 		pDpID = mapID[ nodes[oaDpID].parent[i] ];
 		if(nodes[pDpID].nodeType == PATH){
+
+			// At least has one path parent
+			hasPathParent = true;
 
 			// Search for the operation child itself
 			for(int j = 0; j < (int)nodes[pDpID].child.size(); j++)
@@ -63,6 +67,7 @@ bool Dionysus::canSchedule(int owDpID){
 
 	// Some flow can be move right now
 	if(total > 0.0) canSchedule = true;
+	if(!hasPathParent) operations[ nodes[owDpID].nodeIndex ].isFinished = true;
 
 	// We try to update traffic "virtually", and record the resulting rule set
 	if(canSchedule){
@@ -276,6 +281,11 @@ bool Dionysus::canSchedule(int owDpID){
 				paths[pID].committed = commitTmp[cID++];
 			}
 		}
+
+		// Copy back the latest traffic
+		fID = operations[ nodes[owDpID].nodeIndex ].flowID;
+		for(int i = 0; i < (int)links.size(); i++)
+			links[i].curTraffic[fID] = curTraffic[i];
 
 		// Operation IDs
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];

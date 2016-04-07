@@ -88,8 +88,10 @@ void Dionysus::readFlow(void){
 
 						// Update this link with initial traffic
 						portID = findDstPort(ltmp.sourceID, ltmp.destinationID);
-						if(portID != -1)
+						if(portID != -1){
+							links[ switches[ltmp.sourceID].linkID[portID] ].linkCapacity -= ptmp.traffic;
 							links[ switches[ltmp.sourceID].linkID[portID] ].curTraffic[fID] += ptmp.traffic;
+						}
 
 						// Exception
 						else{

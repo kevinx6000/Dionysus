@@ -14,6 +14,9 @@ int main(void)
 	// Generate dependency graph
 	simulator.genDepGraph();
 
+	// DEBUG
+	simulator.debug();
+
 	// Schedule update
 	simulator.start();
 

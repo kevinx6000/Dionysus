@@ -18,7 +18,10 @@ void Dionysus::start(void){
 		updateGraph();
 
 		// Cycle exits when calculating CPL
-		if(!calculateCPL()) fprintf(stderr, "ERROR: cycle exists\n");
+		if(!calculateCPL()){
+			fprintf(stderr, "ERROR: cycle exists\n");
+			exit(1);
+		}
 		else{
 
 			// Sort with their CPL
@@ -51,14 +54,15 @@ void Dionysus::start(void){
 				// Deadlock
 				if(isDeadlock){
 					fprintf(stderr, "DEADLOCK occurs!\n");
+					debug();
+					exit(1);
 				}
 
 				// Finished
 				else{
 					fprintf(stderr, "All operation finished.\n");
-//					break;
+					break;
 				}
-				break;
 			}
 		}
 	}

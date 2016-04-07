@@ -46,9 +46,9 @@ void Dionysus::schedule(int owDpID){
 			fprintf(stderr, "Delete rules @ switch %d\n", operations[odID].ruleSet[i].switchID);
 
 		// Mark three operation nodes as finished
-		operations[oaDpID].isFinished = true;
-		operations[owDpID].isFinished = true;
-		operations[odDpID].isFinished = true;
+		operations[oaID].isFinished = true;
+		operations[owID].isFinished = true;
+		operations[odID].isFinished = true;
 	}
 
 	// No update needed

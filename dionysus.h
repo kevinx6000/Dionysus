@@ -11,7 +11,6 @@ class Dionysus{
 		void readTopo(void);					// Read topology
 		void readFlow(void);					// Read flow
 		void genDepGraph(void);					// Generate dependency graph
-		void schedule(int);						// Schedule operation Oi
 		void start(void);						// Start scheduling
 		void debug(void);						// For debugging
 	private:
@@ -25,8 +24,9 @@ class Dionysus{
 		void requireCap(int, int, int, double);	// Require link capacity (add dependency)
 		void releaseCap(int, int, int, double);	// Release link capacity (add dependency)
 		void updateGraph(void);					// Update current dependency graph
-		bool calculateCPL(void);				// Calculate the CPL in dependency graph
 		void sortCPL(void);						// Sort nodes according to their CPL
+		void schedule(int);						// Schedule operation Oi
+		bool calculateCPL(void);				// Calculate the CPL in dependency graph
 		bool canSchedule(int);					// Check if some operation o can be scheduled now
 		static bool cmpCPL(Node, Node);			// Comparison function for sorting CPL
 		int findDstPort(int, int);				// Find the port ID of destination switch

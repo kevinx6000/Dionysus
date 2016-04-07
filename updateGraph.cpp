@@ -79,10 +79,10 @@ void Dionysus::updateGraph(void){
 					}
 				}
 
-				else{
+				else
 					// Mark back into as un-finished
 					operations[ nodes[i].nodeIndex ].isFinished = false;
-				}
+				
 			}
 		}
 	}

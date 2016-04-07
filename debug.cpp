@@ -8,8 +8,12 @@ void Dionysus::debug(void){
 
 	// Links
 	#ifdef LINKS
-	for(int i = 0; i < (int)links.size(); i++)
-		fprintf(stderr, "%d to %d, initial = %.2lf\n", links[i].sourceID, links[i].destinationID, links[i].curTraffic);
+	for(int fID = 0; fID < (int)allFlow.size(); fID++){
+		fprintf(stderr, "Flow %d:\n", fID);
+		for(int i = 0; i < (int)links.size(); i++)
+			fprintf(stderr, "%d to %d, initial = %.2lf\n", links[i].sourceID, links[i].destinationID, links[i].curTraffic[fID]);
+	}
+	
 	#endif
 
 	// Flow
@@ -34,6 +38,7 @@ void Dionysus::debug(void){
 	#ifdef GRAPH
 	int ind;
 	for(int i = 0; i < (int)nodes.size(); i++){
+		if(nodes[i].child.size() == 0 && nodes[i].parent.size() == 0) continue;
 		fprintf(stderr, "Node id = %2d, type = ", nodes[i].nodeID);
 		switch(nodes[i].nodeType){
 			// Switch
