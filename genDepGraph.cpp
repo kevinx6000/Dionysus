@@ -59,6 +59,10 @@ void Dionysus::genDepGraph(void){
 		// For each path
 		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++){
 
+			// Sort path links according to their ID
+			sort(allFlow[i].flowPath[j].link[0].begin(), allFlow[i].flowPath[j].link[0].end(), cmpPATH);
+			sort(allFlow[i].flowPath[j].link[1].begin(), allFlow[i].flowPath[j].link[1].end(), cmpPATH);
+
 			// Record traffic size
 			traffic = allFlow[i].flowPath[j].traffic;
 
@@ -337,4 +341,9 @@ int Dionysus::createNode(int nodeType, int nodeIndex = 0){
 	this->nodes.push_back(ntmp);
 	this->mapID.push_back(ntmp.nodeID);
 	return ntmp.nodeID;
+}
+
+// Sort comparison function for Node with CPL
+bool Dionysus::cmpPATH(Link A, Link B){
+	return A.sourceID < B.sourceID;
 }

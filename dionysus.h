@@ -29,6 +29,7 @@ class Dionysus{
 		bool calculateCPL(void);				// Calculate the CPL in dependency graph
 		bool canSchedule(int);					// Check if some operation o can be scheduled now
 		static bool cmpCPL(Node, Node);			// Comparison function for sorting CPL
+		static bool cmpPATH(Link, Link);		// Comparison function for sorting path links
 		int findDstPort(int, int);				// Find the port ID of destination switch
 		int createNode(int, int);				// Create node
 		int dfsCPL(int);						// DFS for CPL
