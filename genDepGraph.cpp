@@ -185,6 +185,12 @@ void Dionysus::genDepGraph(void){
 				sID1 = allFlow[i].flowPath[j].link[0][ptr1].sourceID;
 				dID1 = allFlow[i].flowPath[j].link[0][ptr1].destinationID;
 
+				// Ingress switch
+				if(sID1 == allFlow[i].ingressID){
+					ingPtr1 = ptr1++;
+					continue;
+				}
+			
 				// Release capacity on sID1-dID1
 				releaseCap(sID1, dID1, pOutDpID, traffic);
 
@@ -212,6 +218,12 @@ void Dionysus::genDepGraph(void){
 				// Switch ID
 				sID2 = allFlow[i].flowPath[j].link[1][ptr2].sourceID;
 				dID2 = allFlow[i].flowPath[j].link[1][ptr2].destinationID;
+
+				// Ingress switch
+				if(sID2 == allFlow[i].ingressID){
+					ingPtr2 = ptr2++;
+					continue;
+				}
 
 				// Require capacity on sID2-dID2
 				requireCap(sID2, dID2, pInDpID, traffic);
