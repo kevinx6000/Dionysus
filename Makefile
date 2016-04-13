@@ -1,8 +1,21 @@
-all: main
-	g++ -o main main.o
+F = 
+CC = g++
+CFLAGS = -c -Wall $(F)
+SRCS = main.cpp readInput.cpp genDepGraph.cpp updateGraph.cpp calculateCPL.cpp sortCPL.cpp canSchedule.cpp start.cpp schedule.cpp debug.cpp
+OBJS = $(SRCS:.cpp=.o)
+EXEC = main
+TESTCASE = input.txt
 
-main:
-	g++ -c main.cpp
+all: $(SRCS) $(EXEC)
+
+$(EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -rf main *.o *~
+	@rm -rf $(EXEC) $(OBJS) *~
+
+run:
+	@./$(EXEC) < $(TESTCASE)
