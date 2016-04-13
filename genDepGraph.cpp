@@ -9,7 +9,7 @@ void Dionysus::genDepGraph(void){
 	// Variables
 	int pInDpID, pOutDpID, sID1, sID2, dID1, dID2, owDpID, oaDpID, odDpID, ingPtr1, ingPtr2;
 	int ptr1, ptr2, siz1, siz2;
-	bool hasDiff;
+	bool hasDiff, exist;
 	double traffic;
 	Path ptmp;
 	Edge etmp;
@@ -111,20 +111,43 @@ void Dionysus::genDepGraph(void){
 						requireCap(sID2, dID2, pInDpID, traffic);
 						releaseCap(sID1, dID1, pOutDpID, traffic);
 
+						// Check if Switch -> Op ADD aleady exists
+						exist = false;
+						for(int k = 0; k < (int)nodes[switches[sID1].dpID].child.size(); k++){
+							if(nodes[switches[sID1].dpID].child[k].nodeID == oaDpID){
+								exist = true;
+								nodes[switches[sID1].dpID].child[k].intWeight++;
+								break;
+							}
+						}
+
 						// Add dependency link: Switch -> Op ADD
-						etmp.nodeID = oaDpID;
-						etmp.intWeight = 1;
-						/* Fake link weight: we update switch resource according to actual expense */
-						nodes[switches[sID1].dpID].child.push_back(etmp);
-						nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+						if(!exist){
+							etmp.nodeID = oaDpID;
+							etmp.intWeight = 1;
+							/* Fake link weight: we update switch resource according to actual expense */
+							nodes[switches[sID1].dpID].child.push_back(etmp);
+							nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+						}
+
+						// Check if Op DEL -> Switch aleady exists
+						exist = false;
+						for(int k = 0; k < (int)nodes[odDpID].child.size(); k++){
+							if(nodes[odDpID].child[k].nodeID == switches[sID1].dpID){
+								exist = true;
+								nodes[odDpID].child[k].intWeight++;
+								break;
+							}
+						}
 
 						// Add dependency link: Op DEL -> Switch
-						etmp.nodeID = switches[sID1].dpID;
-						etmp.intWeight = 1;
-						/* Fake link weight: we update switch resource according to actual expense */
-						nodes[odDpID].child.push_back(etmp);
-						nodes[switches[sID1].dpID].parent.push_back(odDpID);
-
+						if(!exist){
+							etmp.nodeID = switches[sID1].dpID;
+							etmp.intWeight = 1;
+							/* Fake link weight: we update switch resource according to actual expense */
+							nodes[odDpID].child.push_back(etmp);
+							nodes[switches[sID1].dpID].parent.push_back(odDpID);
+						}
 						hasDiff = true;
 					}
 					ptr1++;
@@ -137,17 +160,41 @@ void Dionysus::genDepGraph(void){
 					// Require capacity on sID2-dID2
 					requireCap(sID2, dID2, pInDpID, traffic);
 
+					// Check if Switch -> Op ADD aleady exists
+					exist = false;
+					for(int k = 0; k < (int)nodes[switches[sID2].dpID].child.size(); k++){
+						if(nodes[switches[sID2].dpID].child[k].nodeID == oaDpID){
+							exist = true;
+							nodes[switches[sID2].dpID].child[k].intWeight++;
+							break;
+						}
+					}
+
 					// Add dependency link: Switch -> Op ADD
-					etmp.nodeID = oaDpID;
-					etmp.intWeight = 1;
-					nodes[switches[sID2].dpID].child.push_back(etmp);
-					nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+					if(!exist){
+						etmp.nodeID = oaDpID;
+						etmp.intWeight = 1;
+						nodes[switches[sID2].dpID].child.push_back(etmp);
+						nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+					}
+
+					// Check if Op DEL -> Switch already exists
+					exist = false;
+					for(int k = 0; k < (int)nodes[odDpID].child.size(); k++){
+						if(nodes[odDpID].child[k].nodeID == switches[sID2].dpID){
+							exist = true;
+							nodes[odDpID].child[k].intWeight++;
+							break;
+						}
+					}
 
 					// Add dependency link: Op DEL -> Switch
-					etmp.nodeID = switches[sID2].dpID;
-					etmp.intWeight = 1;
-					nodes[odDpID].child.push_back(etmp);
-					nodes[switches[sID2].dpID].parent.push_back(odDpID);
+					if(!exist){
+						etmp.nodeID = switches[sID2].dpID;
+						etmp.intWeight = 1;
+						nodes[odDpID].child.push_back(etmp);
+						nodes[switches[sID2].dpID].parent.push_back(odDpID);
+					}
 
 					hasDiff = true;
 					ptr2++;
@@ -159,19 +206,43 @@ void Dionysus::genDepGraph(void){
 					// Release capacity on sID1-dID1
 					releaseCap(sID1, dID1, pOutDpID, traffic);
 
+					// Check if Switch -> Op ADD aleady exists
+					exist = false;
+					for(int k = 0; k < (int)nodes[switches[sID1].dpID].child.size(); k++){
+						if(nodes[switches[sID1].dpID].child[k].nodeID == oaDpID){
+							exist = true;
+							nodes[switches[sID1].dpID].child[k].intWeight++;
+							break;
+						}
+					}
+
 					// Add dependency link: Switch -> Op ADD
-					etmp.nodeID = oaDpID;
-					etmp.intWeight = 1;
-					/* Fake link weight: we update switch resource according to actual expense */
-					nodes[switches[sID1].dpID].child.push_back(etmp);
-					nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+					if(!exist){
+						etmp.nodeID = oaDpID;
+						etmp.intWeight = 1;
+						/* Fake link weight: we update switch resource according to actual expense */
+						nodes[switches[sID1].dpID].child.push_back(etmp);
+						nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+					}
+
+					// Check if Op DEL -> Switch already exists
+					exist = false;
+					for(int k = 0; k < (int)nodes[odDpID].child.size(); k++){
+						if(nodes[odDpID].child[k].nodeID == switches[sID1].dpID){
+							exist = true;
+							nodes[odDpID].child[k].intWeight++;
+							break;
+						}
+					}
 
 					// Add dependency link: Op DEL -> Switch
-					etmp.nodeID = switches[sID1].dpID;
-					etmp.intWeight = 1;
-					/* Fake link weight: we update switch resource according to actual expense */
-					nodes[odDpID].child.push_back(etmp);
-					nodes[switches[sID1].dpID].parent.push_back(odDpID);
+					if(!exist){
+						etmp.nodeID = switches[sID1].dpID;
+						etmp.intWeight = 1;
+						/* Fake link weight: we update switch resource according to actual expense */
+						nodes[odDpID].child.push_back(etmp);
+						nodes[switches[sID1].dpID].parent.push_back(odDpID);
+					}
 
 					hasDiff = true;
 					ptr1++;
@@ -194,19 +265,43 @@ void Dionysus::genDepGraph(void){
 				// Release capacity on sID1-dID1
 				releaseCap(sID1, dID1, pOutDpID, traffic);
 
+				// Check if Switch -> Op ADD aleady exists
+				exist = false;
+				for(int k = 0; k < (int)nodes[switches[sID1].dpID].child.size(); k++){
+					if(nodes[switches[sID1].dpID].child[k].nodeID == oaDpID){
+						exist = true;
+						nodes[switches[sID1].dpID].child[k].intWeight++;
+						break;
+					}
+				}
+
 				// Add dependency link: Switch -> Op ADD
-				etmp.nodeID = oaDpID;
-				etmp.intWeight = 1;
-				/* Fake link weight: we update switch resource according to actual expense */
-				nodes[switches[sID1].dpID].child.push_back(etmp);
-				nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+				if(!exist){
+					etmp.nodeID = oaDpID;
+					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
+					nodes[switches[sID1].dpID].child.push_back(etmp);
+					nodes[oaDpID].parent.push_back(switches[sID1].dpID);
+				}
+
+				// Check if Op DEL -> Switch already exists
+				exist = false;
+				for(int k = 0; k < (int)nodes[odDpID].child.size(); k++){
+					if(nodes[odDpID].child[k].nodeID == switches[sID1].dpID){
+						exist = true;
+						nodes[odDpID].child[k].intWeight++;
+						break;
+					}
+				}
 
 				// Add dependency link: Op DEL -> Switch
-				etmp.nodeID = switches[sID1].dpID;
-				etmp.intWeight = 1;
-				/* Fake link weight: we update switch resource according to actual expense */
-				nodes[odDpID].child.push_back(etmp);
-				nodes[switches[sID1].dpID].parent.push_back(odDpID);
+				if(!exist){
+					etmp.nodeID = switches[sID1].dpID;
+					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
+					nodes[odDpID].child.push_back(etmp);
+					nodes[switches[sID1].dpID].parent.push_back(odDpID);
+				}
 
 				hasDiff = true;
 				ptr1++;
@@ -228,19 +323,43 @@ void Dionysus::genDepGraph(void){
 				// Require capacity on sID2-dID2
 				requireCap(sID2, dID2, pInDpID, traffic);
 
+				// Check if Switch -> Op ADD aleady exists
+				exist = false;
+				for(int k = 0; k < (int)nodes[switches[sID2].dpID].child.size(); k++){
+					if(nodes[switches[sID2].dpID].child[k].nodeID == oaDpID){
+						exist = true;
+						nodes[switches[sID2].dpID].child[k].intWeight++;
+						break;
+					}
+				}
+
 				// Add dependency link: Switch -> Op ADD
-				etmp.nodeID = oaDpID;
-				etmp.intWeight = 1;
-				/* Fake link weight: we update switch resource according to actual expense */
-				nodes[switches[sID2].dpID].child.push_back(etmp);
-				nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+				if(!exist){
+					etmp.nodeID = oaDpID;
+					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
+					nodes[switches[sID2].dpID].child.push_back(etmp);
+					nodes[oaDpID].parent.push_back(switches[sID2].dpID);
+				}
+
+				// Check if Op DEL -> Switch already exists
+				exist = false;
+				for(int k = 0; k < (int)nodes[odDpID].child.size(); k++){
+					if(nodes[odDpID].child[k].nodeID == switches[sID2].dpID){
+						exist = true;
+						nodes[odDpID].child[k].intWeight++;
+						break;
+					}
+				}
 
 				// Add dependency link: Op DEL -> Switch
-				etmp.nodeID = switches[sID2].dpID;
-				etmp.intWeight = 1;
-				/* Fake link weight: we update switch resource according to actual expense */
-				nodes[odDpID].child.push_back(etmp);
-				nodes[switches[sID2].dpID].parent.push_back(odDpID);
+				if(!exist){
+					etmp.nodeID = switches[sID2].dpID;
+					etmp.intWeight = 1;
+					/* Fake link weight: we update switch resource according to actual expense */
+					nodes[odDpID].child.push_back(etmp);
+					nodes[switches[sID2].dpID].parent.push_back(odDpID);
+				}
 
 				hasDiff = true;
 				ptr2++;
