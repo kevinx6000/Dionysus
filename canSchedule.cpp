@@ -9,8 +9,8 @@ bool Dionysus::canSchedule(int owDpID){
 	// Variables
 	int owID, oaDpID, odDpID, pDpID, pID, rDpID, rID;
 	int fID, fpID, sID, dID, portID, ingID, cID;
-	bool canSchedule, isZero, isChanged, hasPathParent;
-	double total, avTmp, traffic;
+	bool canSchedule, isChanged, hasPathParent;
+	double total, avTmp, traffic, preTotal, curTotal;
 	vector<double>preTraffic;
 	vector<double>curTraffic;
 	vector<double>commitTmp;
@@ -145,18 +145,34 @@ bool Dionysus::canSchedule(int owDpID){
 		for(int i = 0; i < (int)switches.size(); i++){
 			if(i != ingID){
 
-				// Check if links are changed OR all links are zero
-				isZero = true, isChanged = false;
+				// Check if ratio are changed OR all links are zero
+				isChanged = false;
+				preTotal = curTotal = 0.0;
 				for(int j = 0; j < (int)switches[i].linkID.size(); j++){
-					traffic = curTraffic[ switches[i].linkID[j] ];
-					if(traffic != 0.0) isZero = false;
-					if(traffic != preTraffic[ switches[i].linkID[j] ]) isChanged = true;
+					curTotal += curTraffic[ switches[i].linkID[j] ];
+					preTotal += preTraffic[ switches[i].linkID[j] ];
+				}
+
+				// At least one current link is not zero
+				if(curTotal > 0.0){
+
+					// From zero to non-zero: must changed!
+					if(preTotal == 0.0) isChanged = true;
+					else{
+						// Check ratio difference
+						for(int j = 0; j < (int)switches[i].linkID.size(); j++){
+							if(curTraffic[ switches[i].linkID[j] ]/curTotal != preTraffic[ switches[i].linkID[j] ]/preTotal){
+								isChanged = true;
+								break;
+							}
+						}
+					}
 				}
 
 				// Install new rule if: 
-				// 1. Link traffic of at least one link is not zero 
-				// 2. Link traffic of at least one link has changed
-				if(!isZero && isChanged){
+				// 1. Link traffic of at least one current link is not zero 
+				// 2. Link traffic ratio of at least one link has changed
+				if(curTotal > 0.0 && isChanged){
 					tmpRule.switchID = switches[i].switchID;
 					tmpRule.ruleType = RULE_ADD;
 					for(int j = 0; j < (int)switches[i].linkID.size(); j++)
@@ -167,34 +183,65 @@ bool Dionysus::canSchedule(int owDpID){
 			}
 		}
 
-		// Modify ratio @ ingress switch
-		modRule.switchID = ingID;
-		modRule.ruleType = RULE_MOD;
-		for(int i = 0; i < (int)switches[ingID].linkID.size(); i++)
-			modRule.traffic.push_back(curTraffic[ switches[ingID].linkID[i] ]);
-
 		// Delete rule with old version
 		for(int i = 0; i < (int)switches.size(); i++){
 			if(i != ingID){
 
 				// Check if previous traffic is zero for all links
-				isZero = true, isChanged = false;
+				isChanged = false;
+				preTotal = curTotal = 0.0;
 				for(int j = 0; j < (int)switches[i].linkID.size(); j++){
-					traffic = preTraffic[ switches[i].linkID[j] ];
-					if(traffic != 0.0) isZero = false;
-					if(traffic != curTraffic[ switches[i].linkID[j] ]) isChanged = true;
+					curTotal += curTraffic[ switches[i].linkID[j] ];
+					preTotal += preTraffic[ switches[i].linkID[j] ];
+				}
+
+				// At least one previous link is not zero
+				if(preTotal > 0.0){
+
+					// From non-zero to zero: must changed!
+					if(curTotal == 0.0) isChanged = true;
+					else{
+						// Check ratio difference
+						for(int j = 0; j < (int)switches[i].linkID.size(); j++){
+							if(curTraffic[ switches[i].linkID[j] ]/curTotal != preTraffic[ switches[i].linkID[j] ]/preTotal){
+								isChanged = true;
+								break;
+							}
+						}
+					}
 				}
 
 				// Delete rule if
-				// 1. Previous link traffic of at least one link is not zero
-				// 2. Link traffic of at least one link has changed
-				if(!isZero && isChanged){
+				// 1. Link traffic of at least one previous link is not zero
+				// 2. Link traffic ratio of at least one link has changed
+				if(preTotal > 0.0 && isChanged){
 					tmpRule.switchID = switches[i].switchID;
 					tmpRule.ruleType = RULE_DEL;
 					delRules.push_back(tmpRule);
 				}
 			}
 		}
+
+		// Modify ratio @ ingress switch
+		preTotal = curTotal = 0.0;
+		for(int i = 0; i < (int)switches[ingID].linkID.size(); i++){
+			curTotal += curTraffic[ switches[ingID].linkID[i] ];
+			preTotal += preTraffic[ switches[ingID].linkID[i] ];
+		}
+		isChanged = false;
+		for(int i = 0; i < (int)switches[ingID].linkID.size(); i++){
+			if(curTraffic[ switches[ingID].linkID[i] ]/curTotal != preTraffic[ switches[ingID].linkID[i] ]/preTotal){
+				isChanged = true;
+				break;
+			}
+		}
+		if(isChanged || addRules.size() > 0 || delRules.size() > 0){
+			modRule.switchID = ingID;
+			modRule.ruleType = RULE_MOD;
+			for(int i = 0; i < (int)switches[ingID].linkID.size(); i++)
+				modRule.traffic.push_back(curTraffic[ switches[ingID].linkID[i] ]);
+		}
+		else modRule.switchID = -1;
 	}
 
 	// Check switch memeory resource
@@ -301,8 +348,9 @@ bool Dionysus::canSchedule(int owDpID){
 		operations[ nodes[owDpID].nodeIndex ].ruleSet.clear();
 		operations[ nodes[odDpID].nodeIndex ].ruleSet.clear();
 
-		// Push all three ruleset into operation nodes (if at least one add/del exisits)
-		if(addRules.size() > 0 || delRules.size() > 0){
+		// Push all three ruleset into operation nodes
+		// (if at least one ratio @ ingress switch changed, or new rules added / old rules deleted)
+		if(modRule.switchID != -1){
 			operations[ nodes[oaDpID].nodeIndex ].ruleSet = addRules;
 			operations[ nodes[owDpID].nodeIndex ].ruleSet.push_back(modRule);
 			operations[ nodes[odDpID].nodeIndex ].ruleSet = delRules;

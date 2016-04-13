@@ -9,6 +9,7 @@ void Dionysus::schedule(int owDpID){
 	// Variable
 	int oaID, owID, odID, fID;
 	int oaDpID, odDpID;
+	double totTraffic;
 
 	// Update according to rulesets inside operation nodes
 	if(operations[ nodes[owDpID].nodeIndex ].ruleSet.size() > 0){
@@ -22,16 +23,22 @@ void Dionysus::schedule(int owDpID){
 		oaID = nodes[oaDpID].nodeIndex;
 		for(int i = 0; i < (int)operations[oaID].ruleSet.size(); i++){
 			fprintf(stderr, "Add rules @ switch %d:", operations[oaID].ruleSet[i].switchID);
+			totTraffic = 0.0;
 			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
-				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]);
+				totTraffic += operations[oaID].ruleSet[i].traffic[j];
+			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
+				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]/totTraffic);
 			fprintf(stderr, "\n");
 		}
 
 		// Modify rules
 		owID = nodes[owDpID].nodeIndex;
 		fprintf(stderr, "Modify rule @ ingress switch %d:", operations[owID].ruleSet[0].switchID);
+		totTraffic = 0.0;
 		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
-			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]);
+			totTraffic += operations[owID].ruleSet[0].traffic[i];
+		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
+			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]/totTraffic);
 		fprintf(stderr, "\n");
 
 		// Delete rules
