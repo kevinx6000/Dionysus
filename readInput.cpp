@@ -7,38 +7,133 @@
 void Dionysus::readTopo(void){
 
 	// Variables
+	int k;
 	int n;
-	int numPort;
-	int nxt;
+	int numOfCore;
+	int numOfAggr;
+	int numOfEdge;
+	int src;
+	int dst;
+	double widSw;
+	double lenSw;
+	double x1, y1, x2, y2;
 	Switch stmp;
 	Link ltmp;
 
-	// For each switch
-	scanf("%d", &n);
-	for(int id = 0; id < n; id++){
+	// Constants
+	const double feet = 0.3048;
+	const double inch = 0.0254;
+
+	// Width and length of switch
+	widSw = 24*inch;
+	lenSw = 48*inch;
+
+	// Fattree index K
+	scanf("%d", &k);
+	if(k < 2 || k % 2 ){
+		fprintf(stderr, "Error: illegal K as input.\n");
+		exit(1);
+	}
+
+	// Number of nodes
+	numOfCore = (k/2)*(k/2);
+	numOfAggr = k*k/2;
+	numOfEdge = k*k/2;
+	n = numOfCore + numOfAggr + numOfEdge;
+
+	// Initial value of TCAM and Link capacity
+	// Wired link
+	stmp.tcamUsage = TCAM_CAPACITY;
+	ltmp.linkCapacity = LINK_CAPACITY;
+	ltmp.isWireless = false;
+
+	// Create switches
+	for(int i = 0; i < n; i++){
 
 		// Initialize
-		stmp.switchID = id;
+		stmp.switchID = i;
 		stmp.tcamUsage = TCAM_CAPACITY;
-		ltmp.sourceID = id;
-		ltmp.linkCapacity = LINK_CAPACITY;
+		switches.push_back(stmp);
+	}
 
-		// For each port
-		scanf("%d", &numPort);
-		for(int port = 0; port < numPort; port++){
-			
-			// The switch ID of this port connects to
-			scanf("%d", &nxt);
-			stmp.port.push_back(nxt);
-			stmp.linkID.push_back(links.size());
+	// Positions for ToR switches
+	for(int i = 0; i < numOfEdge; i++){
+		switches[numOfCore + numOfAggr + i].posX = (i % (k/2))*widSw + 0.5*widSw + ((i / (k/2)) % 4) * (10 * feet + (k/2) * widSw);
+		switches[numOfCore + numOfAggr + i].posY = 0.5*lenSw + (i / (k*4/2)) * (lenSw + 8*feet);
+	}
 
-			// Link node
-			ltmp.destinationID = nxt;
+	// Link: Core - Aggregate
+	for(int i = 0; i < numOfAggr; i++){
+		src = numOfCore + i;
+		for(int j = 0; j < k/2; j++){
+			dst = (i % (k/2)) * (k/2) + j;
+
+			// Aggr -> Core
+			switches[src].port.push_back(dst);
+			switches[src].linkID.push_back(links.size());
+			ltmp.sourceID = src;
+			ltmp.destinationID = dst;
+			links.push_back(ltmp);
+
+			// Core -> Aggr
+			switches[dst].port.push_back(src);
+			switches[dst].linkID.push_back(links.size());
+			ltmp.sourceID = dst;
+			ltmp.destinationID = src;
 			links.push_back(ltmp);
 		}
-		switches.push_back(stmp);
-		stmp.port.clear();
-		stmp.linkID.clear();
+	}
+
+	// Link: Aggregate - Edge
+	for(int i = 0; i < numOfAggr; i++){
+		src = numOfCore + i;
+		for(int j = 0; j < k/2; j++){
+			dst = numOfCore + numOfAggr + (i / (k/2)) * (k/2) + j;
+
+			// Aggr -> Edge
+			switches[src].port.push_back(dst);
+			switches[src].linkID.push_back(links.size());
+			ltmp.sourceID = src;
+			ltmp.destinationID = dst;
+			links.push_back(ltmp);
+
+			// Edge -> Aggr
+			switches[dst].port.push_back(src);
+			switches[dst].linkID.push_back(links.size());
+			ltmp.sourceID = dst;
+			ltmp.destinationID = src;
+			links.push_back(ltmp);
+		}
+	}
+
+	// Link: Edge - Edge
+	// Wireless link
+	ltmp.isWireless = true;
+	for(int i = 0; i < numOfEdge; i++){
+		src = numOfCore + numOfAggr + i;
+		for(int j = i+1; j < numOfEdge; j++){
+			dst = numOfCore + numOfAggr + j;
+			x1 = switches[src].posX;
+			y1 = switches[src].posY;
+			x2 = switches[dst].posX;
+			y2 = switches[dst].posY;
+			if(dis(x1, y1, x2, y2) <= WIRELESS_RANGE){
+
+				// Src -> Dst
+				switches[src].port.push_back(dst);
+				switches[src].linkID.push_back(links.size());
+				ltmp.sourceID = src;
+				ltmp.destinationID = dst;
+				links.push_back(ltmp);
+
+				// Dst -> Src
+				switches[dst].port.push_back(src);
+				switches[dst].linkID.push_back(links.size());
+				ltmp.sourceID = dst;
+				ltmp.destinationID = src;
+				links.push_back(ltmp);
+			}
+		}
 	}
 }
 

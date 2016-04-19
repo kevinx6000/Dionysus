@@ -12,6 +12,8 @@ class Switch{
 		int tcamUsage;		// Current TCAM usage
 		vector<int>port;	// The switch ID this port connects to
 		vector<int>linkID;	// The link ID of this port
+		double posX;		// X position of ToR switch
+		double posY;		// Y position of ToR switch
 };
 
 // Link node
@@ -22,6 +24,7 @@ class Link{
 		int destinationID;	// Destination switch ID
 		double linkCapacity;// Link capacity
 		vector<double>curTraffic;	// Current traffic of this link of some flow
+		bool isWireless;	// Mark as wireless or not
 };
 
 // Flow path
