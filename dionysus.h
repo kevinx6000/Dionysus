@@ -16,6 +16,8 @@ class Dionysus{
 	private:
 		vector<Switch>switches;					// Switch node
 		vector<Link>links;						// Link node
+		vector<TrancNode>trancNode;				// Transceiver node: Wireless AP bandwidth guarantee
+		vector<InterNode>interNode;				// Interference node: Interference processing
 		vector<Path>paths;						// Path node
 		vector<Operation>operations;			// Operation node
 		vector<Flow>allFlow;					// All flows
@@ -33,6 +35,8 @@ class Dionysus{
 		int findDstPort(int, int);				// Find the port ID of destination switch
 		int createNode(int, int);				// Create node
 		int dfsCPL(int);						// DFS for CPL
+		double vecdot(double[], double[], double[], double[]);	// Vector dot
+		double vecdis(double[], double[], double[], double[]);	// Vector distance
 };
 
 #endif

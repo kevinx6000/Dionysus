@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <set>
 using namespace std;
 
 #define TCAM_CAPACITY 1500
@@ -15,5 +16,6 @@ using namespace std;
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define dis(x1,y1,x2,y2) sqrt(((x1)-(x2))*((x1)-(x2)) + ((y1)-(y2))*((y1)-(y2)))
+#define myAbs(x) ((x)>0?(x):(-(x)))
 
 #endif
