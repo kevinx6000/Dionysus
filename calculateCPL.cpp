@@ -33,6 +33,9 @@ int Dionysus::dfsCPL(int nowID){
 // Calculate CPL
 bool Dionysus::calculateCPL(void){
 
+	// Variable
+	bool noCycle = true;
+
 	// Clear CPL
 	for(int i = 0; i < (int)nodes.size(); i++)
 		nodes[i].CPL = -1;
@@ -41,8 +44,17 @@ bool Dionysus::calculateCPL(void){
 	for(int i = 0; i < (int)nodes.size(); i++){
 		if((int)nodes[i].parent.size() == 0){
 			int tmp = dfsCPL(mapID[ nodes[i].nodeID ]);
-			if(tmp == -1) return false;
+			if(tmp == -1){
+				noCycle = false;
+				break;
+			}
 		}
 	}
-	return true;
+
+	// Cycle exists: random CPL assigned
+	srand((unsigned)time(NULL));
+	for(int i = 0; i < (int)nodes.size(); i++)
+		nodes[i].CPL = rand()%nodes.size();
+
+	return noCycle;
 }
