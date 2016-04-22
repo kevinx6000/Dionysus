@@ -480,7 +480,7 @@ void Dionysus::genDepGraph(void){
 
 					// Transceiver -> Path
 					if(releaseCnt < requireCnt){
-						printf("T->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
+//						printf("T->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
 						etmp.nodeID = pInDpID;
 						etmp.intWeight = requireCnt - releaseCnt;
 						etmp.dobWeight = (requireCnt - releaseCnt) * traffic;
@@ -490,7 +490,7 @@ void Dionysus::genDepGraph(void){
 
 					// Path -> Transceiver
 					else if(releaseCnt > requireCnt){
-						printf("P->T(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
+//						printf("P->T(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
 						etmp.nodeID = trancNode[ switches[*setItr].trancID ].dpID;
 						etmp.intWeight = releaseCnt - requireCnt;
 						etmp.dobWeight = (releaseCnt - requireCnt) * traffic;
@@ -499,14 +499,14 @@ void Dionysus::genDepGraph(void){
 					}
 				}
 			
-				// Check interference node
+				// Add dependency link: Interference
 				for(setItr = interSwitch.begin(); setItr != interSwitch.end(); setItr++){
 					releaseCnt = interNode[ switches[*setItr].interID ].releaseCnt;
 					requireCnt = interNode[ switches[*setItr].interID ].requireCnt;
 
 					// Interference -> Path
 					if(releaseCnt < requireCnt){
-						printf("I->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
+//						printf("I->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
 						etmp.nodeID = pInDpID;
 						etmp.intWeight = requireCnt - releaseCnt;
 						etmp.dobWeight = (requireCnt - releaseCnt) * traffic;
@@ -516,7 +516,7 @@ void Dionysus::genDepGraph(void){
 
 					// Path -> Interference
 					else if(releaseCnt > requireCnt){
-						printf("P->I(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
+//						printf("P->I(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
 						etmp.nodeID = interNode[ switches[*setItr].interID ].dpID;
 						etmp.intWeight = releaseCnt - requireCnt;
 						etmp.dobWeight = (releaseCnt - requireCnt) * traffic;

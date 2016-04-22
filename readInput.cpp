@@ -242,16 +242,5 @@ void Dionysus::readFlow(void){
 		allFlow.push_back(ftmp);
 		ftmp.flowPath.clear();
 	}
-
-	/* TODO: Kill these lines
-	for(int j = 0; j < (int)trancNode.size(); j++){
-		if(trancNode[j].nodeCapacity < LINK_CAPACITY)
-			printf("%d: %.2lf\n", trancNode[j].switchID, trancNode[j].nodeCapacity);
-	}
-	for(int j = 0; j < (int)interNode.size(); j++){
-		if(interNode[j].nodeCapacity < LINK_CAPACITY)
-			printf("%d: %.2lf\n", interNode[j].switchID, interNode[j].nodeCapacity);
-	}
-	/**/
 }
 
