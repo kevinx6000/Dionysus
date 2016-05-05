@@ -11,6 +11,7 @@ class Compete{
 		Compete();
 		Compete(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&);
 		void initialize(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&);
+		void updateResource(const vector<Flow>&);
 		~Compete();
 	private:
 		bool isInitLink;		// Record if link resource is initialized
