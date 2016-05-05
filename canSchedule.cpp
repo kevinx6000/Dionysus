@@ -457,12 +457,19 @@ bool Dionysus::canSchedule(int owDpID){
 			links[i].curTraffic[fID] = curTraffic[i];
 
 		// Operation IDs
+		odDpID = -1;
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];
 		for(int i = 0; i < (int)nodes[owDpID].child.size(); i++){
 			if(nodes[ mapID[ nodes[owDpID].child[i].nodeID ] ].nodeType == OPERATION){
 				odDpID = mapID[ nodes[owDpID].child[i].nodeID ];
 				break;
 			}
+		}
+
+		// Exception
+		if(odDpID == -1){
+			fprintf(stderr, "Error: Operation Delete Node not found.\n");
+			exit(1);
 		}
 
 		// Clear previous operation ruleset

@@ -11,6 +11,9 @@ int main(void)
 	simulator.readTopo();
 	simulator.readFlow();
 
+	// Check cycling/chaining effect
+	simulator.checkCompete();
+
 	// Generate dependency graph
 	simulator.genDepGraph();
 
