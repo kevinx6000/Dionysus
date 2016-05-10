@@ -16,6 +16,7 @@ class Dionysus{
 		void debug(void);						// For debugging
 		bool checkCompete(void);				// Check if cycling/chaining exists
 	private:
+		int pod;								// Pod count of fattree
 		vector<Switch>switches;					// Switch node
 		vector<Link>links;						// Link node
 		vector<TrancNode>trancNode;				// Transceiver node: Wireless AP bandwidth guarantee

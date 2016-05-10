@@ -37,6 +37,7 @@ void Dionysus::readTopo(void){
 		fprintf(stderr, "Error: illegal K as input.\n");
 		exit(1);
 	}
+	pod = k;
 
 	// Number of nodes
 	numOfCore = (k/2)*(k/2);
