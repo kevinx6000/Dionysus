@@ -17,10 +17,12 @@ class Compete{
 
 	private:
 		/* Resource node for compete graph checking */
+		enum{ LINK_RES, TRANC_RES, INTER_RES };
 		class CompRes{
 			public:
 				int srcID;				// Source switch ID
 				int dstID;				// Destination switch ID (link only)
+				int resType;			// Resource type
 				double resCap;			// Resource capacity
 				bool isWireless;		// Check if wireless
 				vector<int>iList;		// Interference nodes (wireless link only)
@@ -33,9 +35,7 @@ class Compete{
 		map<int, int>trancMap;			// Map the index from src to transceiver node ID
 		map<int, int>interMap;			// Map the index from src to interference node ID
 		vector< map<int, int> >linkMap;	// Map the index from (src,dst) to link resource ID
-		vector<CompRes>linkRes;			// Record the link resource node
-		vector<CompRes>trancRes;		// Record the transceiver resource node
-		vector<CompRes>interRes;		// Record the interference resource node
+		vector<CompRes>compRes;			// Record the remaining resource
 };
 
 #endif

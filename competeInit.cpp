@@ -32,24 +32,27 @@ void Compete::initialize(const vector<Link>& initLinks, const vector<TrancNode>&
 		ctmp.dstID = initLinks[i].destinationID;
 		ctmp.isWireless = initLinks[i].isWireless;
 		ctmp.resCap = LINK_CAPACITY;
-		this->linkMap[ ctmp.srcID ][ ctmp.dstID ] = this->linkRes.size();
-		this->linkRes.push_back(ctmp);
+		ctmp.resType = LINK_RES;
+		this->linkMap[ ctmp.srcID ][ ctmp.dstID ] = this->compRes.size();
+		this->compRes.push_back(ctmp);
 	}
 
 	// Copy transceiver node
 	for(int i = 0; i < (int)initTranc.size(); i++){
 		ctmp.srcID = initTranc[i].switchID;
 		ctmp.resCap = LINK_CAPACITY;
-		this->trancMap[ ctmp.srcID ] = this->trancRes.size();
-		this->trancRes.push_back(ctmp);
+		ctmp.resType = TRANC_RES;
+		this->trancMap[ ctmp.srcID ] = this->compRes.size();
+		this->compRes.push_back(ctmp);
 	}
 
 	// Copy interference node
 	for(int i = 0; i < (int)initInter.size(); i++){
 		ctmp.srcID = initInter[i].switchID;
 		ctmp.resCap = LINK_CAPACITY;
-		this->interMap[ ctmp.srcID ] = this->interRes.size();
-		this->interRes.push_back(ctmp);
+		ctmp.resType = INTER_RES;
+		this->interMap[ ctmp.srcID ] = this->compRes.size();
+		this->compRes.push_back(ctmp);
 	}
 
 	// Create interference list in terms of the indexing here
@@ -57,8 +60,9 @@ void Compete::initialize(const vector<Link>& initLinks, const vector<TrancNode>&
 		srcID = initLinks[i].sourceID;
 		dstID = initLinks[i].destinationID;
 		linkID = linkMap[srcID][dstID];
-		for(int j = 0; j < (int)initLinks[i].iList.size(); j++)
-			this->linkRes[linkID].iList.push_back( interMap[ initLinks[i].iList[j] ] );
+		if(compRes[linkID].isWireless)
+			for(int j = 0; j < (int)initLinks[i].iList.size(); j++)
+				this->compRes[linkID].iList.push_back( interMap[ initLinks[i].iList[j] ] );
 	}
 
 	// Set as already initialized
@@ -91,22 +95,42 @@ void Compete::updateResource(const vector<Flow>& allFlow){
 				linkID = linkMap[srcID][dstID];
 
 				// All links
-				linkRes[linkID].resCap -= traffic;
+				compRes[linkID].resCap -= traffic;
 
 				// Wireless links
-				if(linkRes[linkID].isWireless){
+				if(compRes[linkID].isWireless){
 
 					// Transceiver
-					trancRes[ trancMap[srcID] ].resCap -= traffic;
-					trancRes[ trancMap[dstID] ].resCap -= traffic;
+					compRes[ trancMap[srcID] ].resCap -= traffic;
+					compRes[ trancMap[dstID] ].resCap -= traffic;
 
 					// Interference
-					for(int z = 0; z < (int)linkRes[linkID].iList.size(); z++)
-						interRes[ linkRes[linkID].iList[z] ].resCap -= traffic;
+					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++)
+						compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
 				}
 			}
 		}
 	}
+
+	// DEBUG
+	/*
+	for(int i = 0; i < (int)compRes.size(); i++){
+		if(compRes[i].resCap != LINK_CAPACITY){
+			switch(compRes[i].resType){
+				case LINK_RES:
+					fprintf(stderr, "Link: %d-%d", compRes[i].srcID, compRes[i].dstID);
+					break;
+				case TRANC_RES:
+					fprintf(stderr, "Tranc: %d", compRes[i].srcID);
+					break;
+				case INTER_RES:
+					fprintf(stderr, "Inter: %d", compRes[i].srcID);
+					break;
+			}
+			fprintf(stderr, " (%.2lf)\n", compRes[i].resCap);
+		}
+	}
+	*/
 }
 
 // Destructure
@@ -116,7 +140,5 @@ Compete::~Compete(){
 	this->linkMap.clear();
 	this->trancMap.clear();
 	this->interMap.clear();
-	this->linkRes.clear();
-	this->trancRes.clear();
-	this->interRes.clear();
+	this->compRes.clear();
 }
