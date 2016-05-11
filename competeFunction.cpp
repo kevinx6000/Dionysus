@@ -355,6 +355,80 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 	*/
 }
 
+// Create competition graph
+void Compete::createGraph(const vector<Flow> &allFlow){
+
+	// Variables
+	int flowID, pathID;
+	CompNode ntmp;
+	CompEdge etmp;
+	map<int, int>mtmp;
+	vector< map<int, int> >flowMap;
+
+	// Create node for each path flow
+	for(flowID = 0; flowID < (int)allFlow.size(); flowID++){
+		ntmp.flowID = flowID;
+		flowMap.push_back(mtmp);
+		for(pathID = 0; pathID < (int)allFlow[flowID].flowPath.size(); pathID++){
+			ntmp.pathID = pathID;
+			flowMap[flowID][pathID] = compNode.size();
+			compNode.push_back(ntmp);
+		}
+	}
+
+	// Create edge if competition exist
+	for(int resID = 0; resID < (int)compRes.size(); resID++){
+		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++){
+
+			// Cannot get resource at once
+			if(compRes[resID].reqList[reqID].traffic > compRes[resID].resCap){
+
+				// No releasing resource: DEADLOCK
+				if((int)compRes[resID].relList.size() == 0){
+					fprintf(stderr, "Error: no releasing resource (deadlock)\n");
+					exit(1);
+				}
+
+				// Create edge from requiring to releasing
+				flowID = compRes[resID].reqList[reqID].flowID;
+				pathID = compRes[resID].reqList[reqID].pathID;
+				etmp.resID = resID;
+				etmp.dstID = flowMap[flowID][pathID];
+				for(int relID = 0; relID < (int)compRes[resID].relList.size(); relID++){
+					flowID = compRes[resID].relList[relID].flowID;
+					pathID = compRes[resID].relList[relID].pathID;
+					compNode[ flowMap[flowID][pathID] ].edge.push_back(etmp);
+				}
+			}
+		}
+	}
+
+	// DEBUG: compete graph
+	for(int nodeID = 0; nodeID < (int)compNode.size(); nodeID++){
+		if(compNode[nodeID].edge.size() > 0){
+			fprintf(stderr, "%d/%d:\n", compNode[nodeID].flowID, compNode[nodeID].pathID);
+			for(int edgeID = 0; edgeID < (int)compNode[nodeID].edge.size(); edgeID++){
+				int tmpID = compNode[nodeID].edge[edgeID].dstID;
+				int resID = compNode[nodeID].edge[edgeID].resID;
+				fprintf(stderr, "  %d/%d[", compNode[tmpID].flowID, compNode[tmpID].pathID);
+				switch(compRes[resID].resType){
+					case LINK_RES:
+						fprintf(stderr, "L(%d-%d)", compRes[resID].srcID, compRes[resID].dstID);
+						break;
+					case TRANC_RES:
+						fprintf(stderr, "T(%d)", compRes[resID].srcID);
+						break;
+					case INTER_RES:
+						fprintf(stderr, "I(%d)", compRes[resID].srcID);
+						break;
+				}
+				fprintf(stderr, "]");
+			}
+			fprintf(stderr, "\n");
+		}
+	}
+}
+
 // Destructure
 Compete::~Compete(){
 	

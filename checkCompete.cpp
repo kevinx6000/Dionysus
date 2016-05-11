@@ -19,5 +19,8 @@ bool Dionysus::checkCompete(void){
 	// Record release and require resource list
 	this->compete.flowChangeList(allFlow);
 
+	// Create compete graph
+	this->compete.createGraph(allFlow);
+
 	return hasCompete;
 }
