@@ -236,6 +236,9 @@ void Dionysus::readFlow(void){
 					// Record the path
 					ptmp.link[i].push_back(ltmp);
 				}
+
+				// Sort the link ID non-decreasingly
+				sort(ptmp.link[i].begin(), ptmp.link[i].end(), cmpPATH);
 			}
 			ftmp.flowPath.push_back(ptmp);
 			for(i = 0; i < 2; i++) ptmp.link[i].clear();

@@ -13,7 +13,17 @@ class Compete{
 		Compete(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
 		void initialize(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
 		void updateResource(const vector<Flow>&);
+		void flowChangeList(const vector<Flow>&);
 		~Compete();
+
+	private:
+		/* Flow pair for recording usage */
+		class FlowPair{
+			public:
+				int flowID;
+				int pathID;
+				double traffic;
+		};
 
 	private:
 		/* Resource node for compete graph checking */
@@ -23,9 +33,13 @@ class Compete{
 				int srcID;				// Source switch ID
 				int dstID;				// Destination switch ID (link only)
 				int resType;			// Resource type
+				int relCnt;				// Temporary release count
+				int reqCnt;				// Temporary require count
 				double resCap;			// Resource capacity
 				bool isWireless;		// Check if wireless
 				vector<int>iList;		// Interference nodes (wireless link only)
+				vector<FlowPair>relList;
+				vector<FlowPair>reqList;
 		};
 		
 	private:

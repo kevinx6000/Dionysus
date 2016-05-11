@@ -71,10 +71,6 @@ void Dionysus::genDepGraph(void){
 		// For each path
 		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++){
 
-			// Sort path links according to their ID
-			sort(allFlow[i].flowPath[j].link[0].begin(), allFlow[i].flowPath[j].link[0].end(), cmpPATH);
-			sort(allFlow[i].flowPath[j].link[1].begin(), allFlow[i].flowPath[j].link[1].end(), cmpPATH);
-
 			// Find out transceiver switches and interference switches
 			trancSwitch.clear();
 			interSwitch.clear();
