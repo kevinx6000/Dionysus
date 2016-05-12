@@ -22,5 +22,8 @@ bool Dionysus::checkCompete(void){
 	// Create compete graph
 	this->compete.createGraph(allFlow);
 
+	// Check cycle
+	this->compete.checkCycle();
+
 	return hasCompete;
 }

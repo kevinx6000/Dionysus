@@ -15,6 +15,7 @@ class Compete{
 		void updateResource(const vector<Flow>&);
 		void flowChangeList(const vector<Flow>&);
 		void createGraph(const vector<Flow>&);
+		void checkCycle(void);
 		~Compete();
 
 	private:
@@ -66,6 +67,16 @@ class Compete{
 		vector< map<int, int> >linkMap;	// Map the index from (src,dst) to link resource ID
 		vector<CompRes>compRes;			// Record the remaining resource
 		vector<CompNode>compNode;		// Compete graph
+
+	/* Temporary use class-wide variable */
+	private:
+		vector<int>cycleAns;
+		vector<int>cycleList;
+		map<int, int>cycleVis;
+
+	/* Private function */
+	private:
+		void dfsCycle(int, int);
 };
 
 #endif

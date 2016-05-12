@@ -429,6 +429,59 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	}
 }
 
+// Dfs for checking cycle
+void Compete::dfsCycle(int now, int len){
+
+	// Mark as temporary visit
+	cycleVis[now] = 1;
+	cycleList[len] = now;
+
+	// Traverse all its neighbor
+	for(int i = 0; i < (int)compNode[now].edge.size(); i++){
+
+		// Not visit at all
+		if(!cycleVis[compNode[now].edge[i].dstID]){
+			dfsCycle(compNode[now].edge[i].dstID, len+1);
+			if(cycleAns.size() > 0) return;
+		}
+
+		// Cycle detected
+		else if(cycleVis[compNode[now].edge[i].dstID] == 1){
+			int start;
+			for(start = 0; start <= len && cycleList[start] != compNode[now].edge[i].dstID; start++);
+			for(int i = 0; start+i <= len; i++)
+				cycleAns.push_back(cycleList[start+i]);
+			return;
+		}
+	}
+
+	// Mark as final visit
+	cycleVis[now] = 2;
+}
+
+// Check cycle
+void Compete::checkCycle(void){
+
+	// Initialize
+	cycleVis.clear();
+	cycleAns.clear();
+	cycleList.resize(compNode.size());
+
+	// DFS cycle detection
+	for(int i = 0; i < (int)compNode.size(); i++)
+		if(!cycleVis[i] && !cycleAns.size())
+			dfsCycle(i, 0);
+
+	// DEBUG
+	if(cycleAns.size() > 0){
+		fprintf(stderr, "Cycle found.\n");
+		for(int i = 0; i < (int)cycleAns.size(); i++)
+			fprintf(stderr, " %d", cycleAns[i]);
+		fprintf(stderr, "\n");
+	}
+	else fprintf(stderr, "No cycle found.\n");
+}
+
 // Destructure
 Compete::~Compete(){
 	
@@ -437,4 +490,5 @@ Compete::~Compete(){
 	this->trancMap.clear();
 	this->interMap.clear();
 	this->compRes.clear();
+	this->compNode.clear();
 }
