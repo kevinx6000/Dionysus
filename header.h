@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <set>
 #include <map>
+#include <queue>
 using namespace std;
 
 #define TCAM_CAPACITY 1500

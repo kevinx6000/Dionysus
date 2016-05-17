@@ -52,6 +52,7 @@ class InterNode{
 // Flow path
 class FlowPath{
 	public:
+		int dstID[2];
 		double traffic;
 		vector<Link>link[2];
 };
@@ -59,6 +60,7 @@ class FlowPath{
 // Flow
 class Flow{
 	public:
+		int flowID;
 		int ingressID;
 		vector<FlowPath>flowPath;
 };

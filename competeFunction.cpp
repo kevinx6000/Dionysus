@@ -105,8 +105,9 @@ void Compete::updateResource(const vector<Flow>& allFlow){
 					compRes[ trancMap[dstID] ].resCap -= traffic;
 
 					// Interference
-					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++)
+					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++){
 						compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
+					}
 				}
 			}
 		}
@@ -404,6 +405,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	}
 
 	// DEBUG: compete graph
+	/*
 	for(int nodeID = 0; nodeID < (int)compNode.size(); nodeID++){
 		if(compNode[nodeID].edge.size() > 0){
 			fprintf(stderr, "%d/%d:\n", compNode[nodeID].flowID, compNode[nodeID].pathID);
@@ -427,6 +429,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 			fprintf(stderr, "\n");
 		}
 	}
+	*/
 }
 
 // Dfs for checking cycle
@@ -460,26 +463,205 @@ void Compete::dfsCycle(int now, int len){
 }
 
 // Check cycle
-void Compete::checkCycle(void){
+bool Compete::checkCycle(void){
 
 	// Initialize
 	cycleVis.clear();
 	cycleAns.clear();
 	cycleList.resize(compNode.size());
 
-	// DFS cycle detection
+	// DFS cycle detection (pick up the first cycle)
 	for(int i = 0; i < (int)compNode.size(); i++)
 		if(!cycleVis[i] && !cycleAns.size())
 			dfsCycle(i, 0);
 
-	// DEBUG
-	if(cycleAns.size() > 0){
-		fprintf(stderr, "Cycle found.\n");
-		for(int i = 0; i < (int)cycleAns.size(); i++)
-			fprintf(stderr, " %d", cycleAns[i]);
-		fprintf(stderr, "\n");
+	// Return checking result
+	return cycleAns.size() > 0;
+}
+
+// Change current plan to new plan
+void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFlow, vector<Flow>& newFlow1, vector<Flow>& newFlow2, int k){
+
+	// Variable
+	int totalCnt;
+	int srcID, dstID;
+	int flowID, pathID, linkID;
+	int nowID, nxtID;
+	bool done, interOK;
+	double traffic;
+	BFSNode bfsNow, bfsNxt;
+	vector<int>etmp;
+	vector< vector<int> >edg;
+	vector<CompRes>copyRes;
+	map<int, int>prev;
+	map<int, bool>vis;
+	queue<BFSNode>que;
+	Flow ftmp;
+	FlowPath ptmp;
+	Link ltmp;
+
+	// Copy the original plan
+	for(int flowID = 0; flowID < (int)allFlow.size(); flowID++)
+		newFlow1.push_back(allFlow[flowID]);
+
+	// Initialize edge structure
+	totalCnt = 5*k*k/4;
+	for(int i = 0; i < totalCnt; i++)
+		edg.push_back(etmp);
+
+	// Copy wireless links only
+	for(int i = 0; i < (int)initLink.size(); i++)
+		if(initLink[i].isWireless)
+			edg[initLink[i].sourceID].push_back(initLink[i].destinationID);
+
+	// Final path of 2, 4, 6, 8, ... flow occupy the resource
+	for(int i = 0; i < (int)cycleAns.size(); i++){
+		if(i%2){
+			flowID = compNode[cycleAns[i]].flowID;
+			pathID = compNode[cycleAns[i]].pathID;
+			traffic = allFlow[flowID].flowPath[pathID].traffic;
+			for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++){
+				srcID = allFlow[flowID].flowPath[pathID].link[1][j].sourceID;
+				dstID = allFlow[flowID].flowPath[pathID].link[1][j].destinationID;
+				linkID = linkMap[srcID][dstID];
+
+				// All links
+				compRes[linkID].resCap -= traffic;
+
+				// Wireless links
+				if(compRes[linkID].isWireless){
+
+					// Transceiver
+					compRes[ trancMap[srcID] ].resCap -= traffic;
+					compRes[ trancMap[dstID] ].resCap -= traffic;
+
+					// Interference
+					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++)
+						compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
+				}
+			}
+		}
 	}
-	else fprintf(stderr, "No cycle found.\n");
+
+	// Find out alternative path for 1, 3, 5, 7, ... path
+	for(int i = 0; i < (int)cycleAns.size(); i++){
+		if(!(i%2)){
+			flowID = compNode[cycleAns[i]].flowID;
+			pathID = compNode[cycleAns[i]].pathID;
+			srcID = allFlow[flowID].ingressID;
+			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
+			traffic = allFlow[flowID].flowPath[pathID].traffic;
+
+			// Copy resource usage
+			bfsNow.interCap.clear();
+			for(int j = 0; j < (int)compRes.size(); j++){
+				copyRes.push_back(compRes[j]);
+				if(copyRes[j].resType == INTER_RES)
+					bfsNow.interCap[ copyRes[j].srcID ] = LINK_CAPACITY-copyRes[j].resCap;
+			}
+
+			// BFS
+			done = false;
+			bfsNow.switchID = srcID;
+			que.push(bfsNow);
+			vis[srcID] = true;
+			prev[srcID] = srcID;
+			while(!que.empty() && !done){
+				bfsNow = que.front();
+				nowID = bfsNow.switchID;
+				que.pop();
+				if(copyRes[ trancMap[nowID] ].resCap < traffic) continue;
+
+				// Search neighbor
+				for(int j = 0; j < (int)edg[nowID].size(); j++){
+					nxtID = edg[nowID][j];
+					bfsNxt = bfsNow;
+					bfsNxt.switchID = nxtID;
+					if(copyRes[ trancMap[nxtID] ].resCap < traffic) continue;
+
+					// Un-visited
+					if(!vis[nxtID]){
+
+						// Check interference
+						interOK = true;
+						linkID = linkMap[nowID][nxtID];
+						for(int k = 0; k < (int)copyRes[linkID].iList.size(); k++){
+							if(bfsNow.interCap[ copyRes[ copyRes[linkID].iList[k] ].srcID ] + traffic > LINK_CAPACITY){
+								interOK = false;
+								break;
+							}
+							else{
+								// Update
+								bfsNxt.interCap[ copyRes[ copyRes[linkID].iList[k] ].srcID ] += traffic;
+							}
+						}
+
+						// Feasible
+						if(interOK){
+							que.push(bfsNxt);
+							vis[nxtID] = true;
+							prev[nxtID] = nowID;
+
+							// Destination
+							if(nxtID == dstID){
+								done = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// If found
+			if(done){
+
+				// DEBUG: print out path
+				nowID = dstID;
+				while(nowID != srcID){
+					fprintf(stderr, "%d <-- ", nowID);
+					nowID = prev[nowID];
+				}
+				fprintf(stderr, "%d\n", srcID);
+
+				// Modify flow transition info in newFlow1
+				// TODO: THIS IS ONLY HOP INFO, NOT THE FORMAY AS allFlow
+				newFlow1[flowID].flowPath[pathID].link[1].clear();
+				nowID = dstID;
+				while(nowID != srcID){
+					ltmp.sourceID = prev[nowID];
+					ltmp.destinationID = nowID;
+					newFlow1[flowID].flowPath[pathID].link[1].push_back(ltmp);
+					nowID = prev[nowID];
+				}
+
+				// Add flow transition info in newFlow2
+				// TODO: THE SAME FLOW OF DIFF PATHS SHOULD BE COMBINED INTO ONE
+				ftmp.flowID = flowID;
+				ftmp.ingressID = srcID;
+				ptmp.link[0] = newFlow1[flowID].flowPath[pathID].link[1];
+				ptmp.link[1].clear();
+				for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++){
+					ptmp.link[1].push_back(allFlow[flowID].flowPath[pathID].link[1][j]);
+				}
+				ftmp.flowPath.push_back(ptmp);
+				newFlow2.push_back(ftmp);
+				ptmp.link[0].clear();
+				ptmp.link[1].clear();
+				ftmp.flowPath.clear();
+
+				// Update back the original resource usage
+				fprintf(stderr, "TODO: update back the original resource usage\n");
+			}
+
+			// Clear
+			vis.clear();
+			prev.clear();
+			copyRes.clear();
+			while(!que.empty()) que.pop();
+		}
+	}
+	// TODO: and change the new paths
+	
 }
 
 // Destructure

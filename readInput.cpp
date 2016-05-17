@@ -186,6 +186,9 @@ void Dionysus::readFlow(void){
 		// Ingress switch
 		scanf("%d", &ftmp.ingressID);
 
+		// Assign flow ID
+		ftmp.flowID = fID;
+
 		// Number of paths
 		scanf("%d", &numPath);
 		while(numPath--){
@@ -236,6 +239,9 @@ void Dionysus::readFlow(void){
 					// Record the path
 					ptmp.link[i].push_back(ltmp);
 				}
+
+				// Record destination switch ID
+				ptmp.dstID[i] = ptmp.link[i][ ptmp.link[i].size()-1 ].destinationID;
 
 				// Sort the link ID non-decreasingly
 				sort(ptmp.link[i].begin(), ptmp.link[i].end(), cmpPATH);

@@ -15,7 +15,8 @@ class Compete{
 		void updateResource(const vector<Flow>&);
 		void flowChangeList(const vector<Flow>&);
 		void createGraph(const vector<Flow>&);
-		void checkCycle(void);
+		bool checkCycle(void);
+		void changePlan(const vector<Link>&, const vector<Flow>&, vector<Flow>&, vector<Flow>&, int);
 		~Compete();
 
 	private:
@@ -56,6 +57,14 @@ class Compete{
 				int flowID;
 				int pathID;
 				vector<CompEdge>edge;
+		};
+
+	private:
+		/* BFS node */
+		class BFSNode{
+			public:
+				int switchID;
+				map<int, double>interCap;
 		};
 		
 	private:

@@ -48,7 +48,7 @@ void Dionysus::genDepGraph(void){
 		otmp.dpID = owDpID = createNode(OPERATION, operations.size());
 		otmp.operationType = OP_MOD;
 		otmp.switchID = allFlow[i].ingressID;
-		otmp.flowID = i;
+		otmp.flowID = allFlow[i].flowID;
 		otmp.isFinished = false;
 		operations.push_back(otmp);
 
