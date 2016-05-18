@@ -169,8 +169,6 @@ void Dionysus::readFlow(void){
 	int numFlow;
 	int numPath;
 	int numLink;
-	int portID;
-	int linkID;
 	Flow ftmp;
 	FlowPath ptmp;
 	Link ltmp;
@@ -179,15 +177,12 @@ void Dionysus::readFlow(void){
 	scanf("%d", &numFlow);
 	for(int fID = 0; fID < numFlow; fID++){
 
-		// Initialize link traffic of every flow
-		for(i = 0; i < (int)links.size(); i++)
-			links[i].curTraffic.push_back(0.0);
-
 		// Ingress switch
 		scanf("%d", &ftmp.ingressID);
 
 		// Assign flow ID
 		ftmp.flowID = fID;
+		ftmp.flowTag= fID;
 
 		// Number of paths
 		scanf("%d", &numPath);
@@ -205,36 +200,6 @@ void Dionysus::readFlow(void){
 
 					// Source to destination
 					scanf("%d%d", &ltmp.sourceID, &ltmp.destinationID);
-
-					// Initial traffic 
-					if(!i){
-
-						// Update this link with initial traffic
-						portID = findDstPort(ltmp.sourceID, ltmp.destinationID);
-						if(portID != -1){
-							linkID = switches[ltmp.sourceID].linkID[portID];
-							links[linkID].linkCapacity -= ptmp.traffic;
-							links[linkID].curTraffic[fID] += ptmp.traffic;
-
-							// Wireless link
-							if(links[linkID].isWireless ){
-
-								// Wireless AP capacity
-								trancNode[ switches[ltmp.sourceID].trancID ].nodeCapacity -= ptmp.traffic;
-								trancNode[ switches[ltmp.destinationID].trancID ].nodeCapacity -= ptmp.traffic;
-
-								// Interference
-								for(int j = 0; j < (int)links[linkID].iList.size(); j++)
-									interNode[ switches[ links[linkID].iList[j] ].interID ].nodeCapacity -= ptmp.traffic;
-							}
-						}
-
-						// Exception
-						else{
-							fprintf(stderr, "Error: no such port exists.\n");
-							exit(1);
-						}
-					}
 
 					// Record the path
 					ptmp.link[i].push_back(ltmp);

@@ -60,7 +60,8 @@ class FlowPath{
 // Flow
 class Flow{
 	public:
-		int flowID;
+		int flowTag;		// Record flow name
+		int flowID;			// Record flow ID in structure
 		int ingressID;
 		vector<FlowPath>flowPath;
 };
@@ -112,6 +113,7 @@ class Operation{
 		int operationType;	// Type of operation(add/mod/del)
 		int switchID;		// ID of switch this operation works on
 		int flowID;			// ID of flow this operation works on
+		int flowTag;		// Name of flow this operation works on
 		bool isFinished;	// Mark the finish state of that operation
 		vector<Rule>ruleSet;// Rule set
 };

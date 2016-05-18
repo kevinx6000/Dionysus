@@ -8,59 +8,79 @@ void Dionysus::start(void){
 
 	// Variable
 	int owID;
+	int numOfPlan;
 	bool isScheduled;
 	bool isDeadlock;
 
-	// Run until all update is finished
-	while(true){
+	// Check cycling/chaining effect
+	if(checkCompete()) numOfPlan = 2;
+	else{
+		numOfPlan = 1;
+		newFlow[0] = allFlow;
+	}
 
-		// Update dependency graph
-		updateGraph();
+	// Transition plan(s)
+	for(int plan = 0; plan < numOfPlan; plan++){
 
-		// Cycle exits when calculating CPL
-		if(!calculateCPL())
-//			fprintf(stderr, "ERROR: cycle exists\n");
-			fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
+		// Update initial resource usage
+		initResource(newFlow[plan]);
 
-		// Sort with their CPL
-		sortCPL();
+		// Generate dependency graph
+		genDepGraph(newFlow[plan]);
 
-		// Check if some operation is ready for scheduled
-		isScheduled = false;
-		for(int i = 0; i < (int)nodes.size(); i++)
-			if(canSchedule(mapID[ nodes[i].nodeID ])){
-				schedule(mapID[ nodes[i].nodeID ]);
-				isScheduled = true;
-			}
+		// Run until all update is finished
+		while(true){
 
-		// No operation scheduled
-		if(!isScheduled){
+			// Update dependency graph
+			updateGraph();
 
-			// Check deadlock
-			isDeadlock = false;
-			for(int i = 0; i < (int)nodes.size(); i++){
-				if(nodes[i].nodeType == OPERATION){
-					owID = nodes[i].nodeIndex;
-					if(operations[owID].operationType == OP_MOD &&
-							!operations[owID].isFinished){
-						isDeadlock = true;
-						break;
+			// Cycle exits when calculating CPL
+			if(!calculateCPL())
+				fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
+
+			// Sort with their CPL
+			sortCPL();
+
+			// Check if some operation is ready for scheduled
+			isScheduled = false;
+			for(int i = 0; i < (int)nodes.size(); i++)
+				if(canSchedule(mapID[ nodes[i].nodeID ], newFlow[plan])){
+					schedule(mapID[ nodes[i].nodeID ]);
+					isScheduled = true;
+				}
+
+			// No operation scheduled
+			if(!isScheduled){
+
+				// Check deadlock
+				isDeadlock = false;
+				for(int i = 0; i < (int)nodes.size(); i++){
+					if(nodes[i].nodeType == OPERATION){
+						owID = nodes[i].nodeIndex;
+						if(operations[owID].operationType == OP_MOD &&
+								!operations[owID].isFinished){
+							isDeadlock = true;
+							break;
+						}
 					}
 				}
-			}
 
-			// Deadlock
-			if(isDeadlock){
-				fprintf(stderr, "DEADLOCK occurs!\n");
-				debug();
-				exit(1);
-			}
+				// Deadlock
+				if(isDeadlock){
+					fprintf(stderr, "DEADLOCK occurs!\n");
+					debug();
+					exit(1);
+				}
 
-			// Finished
-			else{
-				fprintf(stderr, "All operation finished.\n");
-				break;
+				// Finished
+				else{
+					fprintf(stderr, "All operation finished.\n");
+					break;
+				}
 			}
 		}
+
+		// Reset the resource
+		reset();
 	}
 }

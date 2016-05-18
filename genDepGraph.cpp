@@ -4,7 +4,7 @@
 #include "dionysus.h"
 
 // Generate dependency graph
-void Dionysus::genDepGraph(void){
+void Dionysus::genDepGraph(const vector<Flow>& flowPlan){
 
 	// Variables
 	int pInDpID, pOutDpID, sID1, sID2, dID1, dID2, owDpID, oaDpID, odDpID, ingPtr1, ingPtr2;
@@ -36,7 +36,7 @@ void Dionysus::genDepGraph(void){
 		interNode[i].dpID = createNode(RES_INTER, i);
 
 	// For each flow
-	for(int i = 0; i < (int)allFlow.size(); i++){
+	for(int i = 0; i < (int)flowPlan.size(); i++){
 
 		// Create Op ADD node
 		otmp.dpID = oaDpID = createNode(OPERATION, operations.size());
@@ -47,8 +47,9 @@ void Dionysus::genDepGraph(void){
 		// Create Op MOD node
 		otmp.dpID = owDpID = createNode(OPERATION, operations.size());
 		otmp.operationType = OP_MOD;
-		otmp.switchID = allFlow[i].ingressID;
-		otmp.flowID = allFlow[i].flowID;
+		otmp.switchID = flowPlan[i].ingressID;
+		otmp.flowID = flowPlan[i].flowID;
+		otmp.flowTag = flowPlan[i].flowTag;
 		otmp.isFinished = false;
 		operations.push_back(otmp);
 
@@ -69,15 +70,15 @@ void Dionysus::genDepGraph(void){
 		nodes[odDpID].parent.push_back(owDpID);
 
 		// For each path
-		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++){
+		for(int j = 0; j < (int)flowPlan[i].flowPath.size(); j++){
 
 			// Find out transceiver switches and interference switches
 			trancSwitch.clear();
 			interSwitch.clear();
 			for(int state = 0; state < 2; state++){
-				for(int k = 0; k < (int)allFlow[i].flowPath[j].link[state].size(); k++){
-					srcID = allFlow[i].flowPath[j].link[state][k].sourceID;
-					dstID = allFlow[i].flowPath[j].link[state][k].destinationID;
+				for(int k = 0; k < (int)flowPlan[i].flowPath[j].link[state].size(); k++){
+					srcID = flowPlan[i].flowPath[j].link[state][k].sourceID;
+					dstID = flowPlan[i].flowPath[j].link[state][k].destinationID;
 					portID = findDstPort(srcID, dstID);
 					if(portID != -1){
 						if(links[ switches[srcID].linkID[portID] ].isWireless){
@@ -105,7 +106,7 @@ void Dionysus::genDepGraph(void){
 			}
 
 			// Record traffic size
-			traffic = allFlow[i].flowPath[j].traffic;
+			traffic = flowPlan[i].flowPath[j].traffic;
 
 			// Create path nodes
 			ptmp.dpID = pInDpID  = createNode(PATH, paths.size());
@@ -122,22 +123,22 @@ void Dionysus::genDepGraph(void){
 			// Compare initial & final distribution
 			hasDiff = false;
 			ptr1 = ptr2 = 0;
-			siz1 = allFlow[i].flowPath[j].link[0].size();
-			siz2 = allFlow[i].flowPath[j].link[1].size();
+			siz1 = flowPlan[i].flowPath[j].link[0].size();
+			siz2 = flowPlan[i].flowPath[j].link[1].size();
 			while(ptr1 < siz1 && ptr2 < siz2){
 
 				// Switch ID for two pointers
-				sID1 = allFlow[i].flowPath[j].link[0][ptr1].sourceID;
-				dID1 = allFlow[i].flowPath[j].link[0][ptr1].destinationID;
-				sID2 = allFlow[i].flowPath[j].link[1][ptr2].sourceID;
-				dID2 = allFlow[i].flowPath[j].link[1][ptr2].destinationID;
+				sID1 = flowPlan[i].flowPath[j].link[0][ptr1].sourceID;
+				dID1 = flowPlan[i].flowPath[j].link[0][ptr1].destinationID;
+				sID2 = flowPlan[i].flowPath[j].link[1][ptr2].sourceID;
+				dID2 = flowPlan[i].flowPath[j].link[1][ptr2].destinationID;
 
 				// Ingress switch
-				if(sID1 == allFlow[i].ingressID){
+				if(sID1 == flowPlan[i].ingressID){
 					ingPtr1 = ptr1++;
 					continue;
 				}
-				if(sID2 == allFlow[i].ingressID){
+				if(sID2 == flowPlan[i].ingressID){
 					ingPtr2 = ptr2++;
 					continue;
 				}
@@ -294,11 +295,11 @@ void Dionysus::genDepGraph(void){
 			while(ptr1 < siz1){
 
 				// Switch ID
-				sID1 = allFlow[i].flowPath[j].link[0][ptr1].sourceID;
-				dID1 = allFlow[i].flowPath[j].link[0][ptr1].destinationID;
+				sID1 = flowPlan[i].flowPath[j].link[0][ptr1].sourceID;
+				dID1 = flowPlan[i].flowPath[j].link[0][ptr1].destinationID;
 
 				// Ingress switch
-				if(sID1 == allFlow[i].ingressID){
+				if(sID1 == flowPlan[i].ingressID){
 					ingPtr1 = ptr1++;
 					continue;
 				}
@@ -352,11 +353,11 @@ void Dionysus::genDepGraph(void){
 			while(ptr2 < siz2){
 
 				// Switch ID
-				sID2 = allFlow[i].flowPath[j].link[1][ptr2].sourceID;
-				dID2 = allFlow[i].flowPath[j].link[1][ptr2].destinationID;
+				sID2 = flowPlan[i].flowPath[j].link[1][ptr2].sourceID;
+				dID2 = flowPlan[i].flowPath[j].link[1][ptr2].destinationID;
 
 				// Ingress switch
-				if(sID2 == allFlow[i].ingressID){
+				if(sID2 == flowPlan[i].ingressID){
 					ingPtr2 = ptr2++;
 					continue;
 				}
@@ -407,9 +408,9 @@ void Dionysus::genDepGraph(void){
 			}
 
 			// Ingress switch traffic difference
-			sID1 = allFlow[i].ingressID;
-			dID1 = allFlow[i].flowPath[j].link[0][ingPtr1].destinationID;
-			dID2 = allFlow[i].flowPath[j].link[1][ingPtr2].destinationID;
+			sID1 = flowPlan[i].ingressID;
+			dID1 = flowPlan[i].flowPath[j].link[0][ingPtr1].destinationID;
+			dID2 = flowPlan[i].flowPath[j].link[1][ingPtr2].destinationID;
 			if(dID1 != dID2){
 
 				// Require capacity on ingressID-dID2
@@ -437,9 +438,9 @@ void Dionysus::genDepGraph(void){
 
 				// Count release/require on before/after paths
 				for(int state = 0; state < 2; state++){
-					for(int k = 0; k < (int)allFlow[i].flowPath[j].link[state].size(); k++){
-						srcID = allFlow[i].flowPath[j].link[state][k].sourceID;
-						dstID = allFlow[i].flowPath[j].link[state][k].destinationID;
+					for(int k = 0; k < (int)flowPlan[i].flowPath[j].link[state].size(); k++){
+						srcID = flowPlan[i].flowPath[j].link[state][k].sourceID;
+						dstID = flowPlan[i].flowPath[j].link[state][k].destinationID;
 						portID = findDstPort(srcID, dstID);
 						if(portID != -1){
 							if(links[ switches[srcID].linkID[portID] ].isWireless){

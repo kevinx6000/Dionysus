@@ -633,10 +633,12 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 					newFlow1[flowID].flowPath[pathID].link[1].push_back(ltmp);
 					nowID = prev[nowID];
 				}
+				// TODO: sort hop
 
 				// Add flow transition info in newFlow2
 				// TODO: THE SAME FLOW OF DIFF PATHS SHOULD BE COMBINED INTO ONE
-				ftmp.flowID = flowID;
+				ftmp.flowID = newFlow2.size();
+				ftmp.flowTag = flowID;
 				ftmp.ingressID = srcID;
 				ptmp.link[0] = newFlow1[flowID].flowPath[pathID].link[1];
 				ptmp.link[1].clear();

@@ -4,7 +4,7 @@
 #include "dionysus.h"
 
 // Check whether an operation is able to be scheduled
-bool Dionysus::canSchedule(int owDpID){
+bool Dionysus::canSchedule(int owDpID, const vector<Flow>& flowPlan){
 
 	// Variables
 	int owID, oaDpID, odDpID, pDpID, pID, rDpID, rID;
@@ -170,9 +170,9 @@ bool Dionysus::canSchedule(int owDpID){
 				traffic = commitTmp[cID++];
 
 				// New switches along the paths
-				for(int j = 0; j < (int)allFlow[fID].flowPath[fpID].link[1].size(); j++){
-					sID = allFlow[fID].flowPath[fpID].link[1][j].sourceID;
-					dID = allFlow[fID].flowPath[fpID].link[1][j].destinationID;
+				for(int j = 0; j < (int)flowPlan[fID].flowPath[fpID].link[1].size(); j++){
+					sID = flowPlan[fID].flowPath[fpID].link[1][j].sourceID;
+					dID = flowPlan[fID].flowPath[fpID].link[1][j].destinationID;
 					portID = findDstPort(sID, dID);
 
 					// Update current state with committed traffic
@@ -187,9 +187,9 @@ bool Dionysus::canSchedule(int owDpID){
 				}
 
 				// Old switches along the paths
-				for(int j = 0; j < (int)allFlow[fID].flowPath[fpID].link[0].size(); j++){
-					sID = allFlow[fID].flowPath[fpID].link[0][j].sourceID;
-					dID = allFlow[fID].flowPath[fpID].link[0][j].destinationID;
+				for(int j = 0; j < (int)flowPlan[fID].flowPath[fpID].link[0].size(); j++){
+					sID = flowPlan[fID].flowPath[fpID].link[0][j].sourceID;
+					dID = flowPlan[fID].flowPath[fpID].link[0][j].destinationID;
 					portID = findDstPort(sID, dID);
 
 					// Update current state with committed traffic + create new rule

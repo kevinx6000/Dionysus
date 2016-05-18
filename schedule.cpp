@@ -7,16 +7,16 @@
 void Dionysus::schedule(int owDpID){
 
 	// Variable
-	int oaID, owID, odID, fID;
+	int oaID, owID, odID, fTag;
 	int oaDpID, odDpID;
 	double totTraffic;
 
 	// Update according to rulesets inside operation nodes
 	if(operations[ nodes[owDpID].nodeIndex ].ruleSet.size() > 0){
 
-		// Flow ID
-		fID = operations[ nodes[owDpID].nodeIndex ].flowID;
-		fprintf(stderr, "Flow %d:\n", fID);
+		// Flow Tag
+		fTag = operations[ nodes[owDpID].nodeIndex ].flowTag;
+		fprintf(stderr, "Flow %d:\n", fTag);
 
 		// Add rules
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];
