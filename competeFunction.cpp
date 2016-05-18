@@ -495,6 +495,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	vector<CompRes>copyRes;
 	map<int, int>prev;
 	map<int, bool>vis;
+	map<int, int>recordFlow;
 	queue<BFSNode>que;
 	Flow ftmp;
 	FlowPath ptmp;
@@ -624,7 +625,6 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 				fprintf(stderr, "%d\n", srcID);
 
 				// Modify flow transition info in newFlow1
-				// TODO: THIS IS ONLY HOP INFO, NOT THE FORMAY AS allFlow
 				newFlow1[flowID].flowPath[pathID].link[1].clear();
 				nowID = dstID;
 				while(nowID != srcID){
@@ -633,25 +633,42 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 					newFlow1[flowID].flowPath[pathID].link[1].push_back(ltmp);
 					nowID = prev[nowID];
 				}
-				// TODO: sort hop
 
-				// Add flow transition info in newFlow2
-				// TODO: THE SAME FLOW OF DIFF PATHS SHOULD BE COMBINED INTO ONE
-				ftmp.flowID = newFlow2.size();
-				ftmp.flowTag = flowID;
-				ftmp.ingressID = srcID;
+				// Retrieve new path
 				ptmp.link[0] = newFlow1[flowID].flowPath[pathID].link[1];
 				ptmp.link[1].clear();
-				for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++){
+				for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++)
 					ptmp.link[1].push_back(allFlow[flowID].flowPath[pathID].link[1][j]);
+
+				// New flow
+				if(!recordFlow[flowID]){
+
+					// Add path to new flow plan
+					ftmp.flowID = newFlow2.size();
+					ftmp.flowTag = flowID;
+					ftmp.ingressID = srcID;
+					ftmp.flowPath.push_back(ptmp);
+					newFlow2.push_back(ftmp);
+
+					// Mark as existing
+					recordFlow[flowID] = ftmp.flowID+1;
+
+					// Clear
+					ftmp.flowPath.clear();
 				}
-				ftmp.flowPath.push_back(ptmp);
-				newFlow2.push_back(ftmp);
+
+				// Existing flow
+				else{
+
+					// Add to old flow plan
+					newFlow2[ recordFlow[flowID]-1 ].flowPath.push_back(ptmp);
+				}
+
+				// Clear
 				ptmp.link[0].clear();
 				ptmp.link[1].clear();
-				ftmp.flowPath.clear();
 
-				// Update back the original resource usage
+				// TODO: Update back the original resource usage
 				fprintf(stderr, "TODO: update back the original resource usage\n");
 			}
 

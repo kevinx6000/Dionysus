@@ -13,7 +13,17 @@ void Dionysus::start(void){
 	bool isDeadlock;
 
 	// Check cycling/chaining effect
-	if(checkCompete()) numOfPlan = 2;
+	if(checkCompete()){
+		numOfPlan = 2;
+
+		// Sort the hops of new transition plan
+		for(int fID = 0; fID < (int)newFlow[1].size(); fID++){
+			for(int pID = 0; pID < (int)newFlow[1][fID].flowPath.size(); pID++){
+				sort(newFlow[1][fID].flowPath[pID].link[0].begin(), newFlow[1][fID].flowPath[pID].link[0].end(), cmpPATH);
+				sort(newFlow[1][fID].flowPath[pID].link[1].begin(), newFlow[1][fID].flowPath[pID].link[1].end(), cmpPATH);
+			}
+		}
+	}
 	else{
 		numOfPlan = 1;
 		newFlow[0] = allFlow;
