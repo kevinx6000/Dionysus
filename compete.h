@@ -86,6 +86,7 @@ class Compete{
 	/* Private function */
 	private:
 		void dfsCycle(int, int);
+		void occupyRes(const vector<Flow>&, int, int, int, double);
 };
 
 #endif

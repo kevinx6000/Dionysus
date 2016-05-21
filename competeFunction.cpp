@@ -79,39 +79,10 @@ Compete::Compete(const vector<Link>& initLinks, const vector<TrancNode>& initTra
 // Update resource
 void Compete::updateResource(const vector<Flow>& allFlow){
 
-	// Variables
-	int srcID;
-	int dstID;
-	int linkID;
-	double traffic;
-
 	// Update intial resource consumption
-	for(int i = 0; i < (int)allFlow.size(); i++){
-		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++){
-			traffic = allFlow[i].flowPath[j].traffic;
-			for(int k = 0; k < (int)allFlow[i].flowPath[j].link[0].size(); k++){
-				srcID = allFlow[i].flowPath[j].link[0][k].sourceID;
-				dstID = allFlow[i].flowPath[j].link[0][k].destinationID;
-				linkID = linkMap[srcID][dstID];
-
-				// All links
-				compRes[linkID].resCap -= traffic;
-
-				// Wireless links
-				if(compRes[linkID].isWireless){
-
-					// Transceiver
-					compRes[ trancMap[srcID] ].resCap -= traffic;
-					compRes[ trancMap[dstID] ].resCap -= traffic;
-
-					// Interference
-					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++){
-						compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
-					}
-				}
-			}
-		}
-	}
+	for(int i = 0; i < (int)allFlow.size(); i++)
+		for(int j = 0; j < (int)allFlow[i].flowPath.size(); j++)
+			occupyRes(allFlow, i, j, 0, allFlow[i].flowPath[j].traffic);
 
 	// DEBUG
 	/*
@@ -521,26 +492,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			flowID = compNode[cycleAns[i]].flowID;
 			pathID = compNode[cycleAns[i]].pathID;
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
-			for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++){
-				srcID = allFlow[flowID].flowPath[pathID].link[1][j].sourceID;
-				dstID = allFlow[flowID].flowPath[pathID].link[1][j].destinationID;
-				linkID = linkMap[srcID][dstID];
-
-				// All links
-				compRes[linkID].resCap -= traffic;
-
-				// Wireless links
-				if(compRes[linkID].isWireless){
-
-					// Transceiver
-					compRes[ trancMap[srcID] ].resCap -= traffic;
-					compRes[ trancMap[dstID] ].resCap -= traffic;
-
-					// Interference
-					for(int z = 0; z < (int)compRes[linkID].iList.size(); z++)
-						compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
-				}
-			}
+			occupyRes(allFlow, flowID, pathID, 1, traffic);
 		}
 	}
 
@@ -668,8 +620,8 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 				ptmp.link[0].clear();
 				ptmp.link[1].clear();
 
-				// TODO: Update back the original resource usage
-				fprintf(stderr, "TODO: update back the original resource usage\n");
+				// Update back the original resource usage
+				occupyRes(newFlow1, flowID, pathID, 1, newFlow1[flowID].flowPath[pathID].traffic);
 			}
 
 			// Clear
@@ -679,8 +631,32 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			while(!que.empty()) que.pop();
 		}
 	}
-	// TODO: and change the new paths
-	
+}
+
+// Occupy 
+void Compete::occupyRes(const vector<Flow>& flowPlan, int flowID, int pathID, int state, double traffic){
+
+	// Update along the path
+	for(int hop = 0; hop < (int)flowPlan[flowID].flowPath[pathID].link[state].size(); hop++){
+		int srcID = flowPlan[flowID].flowPath[pathID].link[state][hop].sourceID;
+		int dstID = flowPlan[flowID].flowPath[pathID].link[state][hop].destinationID;
+		int linkID = linkMap[srcID][dstID];
+
+		// All links
+		compRes[linkID].resCap -= traffic;
+
+		// Wireless links
+		if(compRes[linkID].isWireless){
+
+			// Transceiver
+			compRes[ trancMap[srcID] ].resCap -= traffic;
+			compRes[ trancMap[dstID] ].resCap -= traffic;
+
+			// Interference
+			for(int z = 0; z < (int)compRes[linkID].iList.size(); z++)
+				compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
+		}
+	}
 }
 
 // Destructure
