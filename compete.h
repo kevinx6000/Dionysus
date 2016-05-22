@@ -15,7 +15,7 @@ class Compete{
 		void updateResource(const vector<Flow>&);
 		void flowChangeList(const vector<Flow>&);
 		void createGraph(const vector<Flow>&);
-		bool checkCycle(void);
+		bool needTemp(void);
 		void changePlan(const vector<Link>&, const vector<Flow>&, vector<Flow>&, vector<Flow>&, int);
 		~Compete();
 
@@ -60,6 +60,10 @@ class Compete{
 		};
 
 	private:
+		/* Enumeration var for vertex cover */
+		enum{NOT_VISITED, BLACK, WHITE, VISITED};
+
+	private:
 		/* BFS node */
 		class BFSNode{
 			public:
@@ -77,15 +81,15 @@ class Compete{
 		vector<CompRes>compRes;			// Record the remaining resource
 		vector<CompNode>compNode;		// Compete graph
 
-	/* Temporary use class-wide variable */
+	/* For minimum vertex cover */
 	private:
-		vector<int>cycleAns;
-		vector<int>cycleList;
-		map<int, int>cycleVis;
-
+		int mvcSize;
+		vector<int>mvcList;
+		map<int, int>visMark;
+		
 	/* Private function */
 	private:
-		void dfsCycle(int, int);
+		void backtrack(int, int, int);
 		void occupyRes(const vector<Flow>&, int, int, int, double);
 };
 

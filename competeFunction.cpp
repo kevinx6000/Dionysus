@@ -403,51 +403,65 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	*/
 }
 
-// Dfs for checking cycle
-void Compete::dfsCycle(int now, int len){
+// Backtracking for vertex cover
+void Compete::backtrack(int now, int cnt, int n){
 
-	// Mark as temporary visit
-	cycleVis[now] = 1;
-	cycleList[len] = now;
+	// Variable
+	int i, mark;
 
-	// Traverse all its neighbor
-	for(int i = 0; i < (int)compNode[now].edge.size(); i++){
-
-		// Not visit at all
-		if(!cycleVis[compNode[now].edge[i].dstID]){
-			dfsCycle(compNode[now].edge[i].dstID, len+1);
-			if(cycleAns.size() > 0) return;
+	// End
+	if(now == n){
+		
+		// Update if better
+		if(cnt < mvcSize){
+			mvcSize = cnt;
+			for(i = 0; i < n; i++)
+				mvcList[i] = visMark[i];
 		}
-
-		// Cycle detected
-		else if(cycleVis[compNode[now].edge[i].dstID] == 1){
-			int start;
-			for(start = 0; start <= len && cycleList[start] != compNode[now].edge[i].dstID; start++);
-			for(int i = 0; start+i <= len; i++)
-				cycleAns.push_back(cycleList[start+i]);
-			return;
-		}
+		return;
 	}
 
-	// Mark as final visit
-	cycleVis[now] = 2;
+	// Prune: never smaller than current
+	if(cnt >= mvcSize) return;
+
+	// Visit
+	visMark[now] = VISITED;
+
+	// Check if can be WHITE
+	for(i = 0; i < (int)compNode[now].edge.size(); i++){
+		mark = visMark[ compNode[now].edge[i].dstID ];
+		if(mark == WHITE) break;
+	}
+
+	// Can be WHITE
+	if(i == (int)compNode[now].edge.size()){
+		visMark[now] = WHITE;
+		backtrack(now+1, cnt, n);
+	}
+
+	// Always can be BLACK
+	visMark[now] = BLACK;
+	backtrack(now+1, cnt+1, n);
+
+	// Leave
+	visMark[now] = NOT_VISITED;
 }
 
-// Check cycle
-bool Compete::checkCycle(void){
+// Check if temporary resource is needed
+bool Compete::needTemp(void){
 
 	// Initialize
-	cycleVis.clear();
-	cycleAns.clear();
-	cycleList.resize(compNode.size());
+	mvcSize = compNode.size();
+	mvcList.clear();
+	for(int i = 0; i < mvcSize; i++)
+		mvcList.push_back(NOT_VISITED);
+	visMark.clear();
 
-	// DFS cycle detection (pick up the first cycle)
-	for(int i = 0; i < (int)compNode.size(); i++)
-		if(!cycleVis[i] && !cycleAns.size())
-			dfsCycle(i, 0);
+	// Minimum Vertex Cover
+	backtrack(0, 0, compNode.size());
 
 	// Return checking result
-	return cycleAns.size() > 0;
+	return mvcSize > 0;
 }
 
 // Change current plan to new plan
@@ -486,21 +500,21 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		if(initLink[i].isWireless)
 			edg[initLink[i].sourceID].push_back(initLink[i].destinationID);
 
-	// Final path of 2, 4, 6, 8, ... flow occupy the resource
-	for(int i = 0; i < (int)cycleAns.size(); i++){
-		if(i%2){
-			flowID = compNode[cycleAns[i]].flowID;
-			pathID = compNode[cycleAns[i]].pathID;
+	// WHITE nodes in MVC: final path occupy the resource
+	for(int i = 0; i < (int)compNode.size(); i++){
+		if(mvcList[i] == WHITE){
+			flowID = compNode[i].flowID;
+			pathID = compNode[i].pathID;
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 			occupyRes(allFlow, flowID, pathID, 1, traffic);
 		}
 	}
 
-	// Find out alternative path for 1, 3, 5, 7, ... path
-	for(int i = 0; i < (int)cycleAns.size(); i++){
-		if(!(i%2)){
-			flowID = compNode[cycleAns[i]].flowID;
-			pathID = compNode[cycleAns[i]].pathID;
+	// BLACK nodes in MVC: find out alternative path
+	for(int i = 0; i < (int)compNode.size(); i++){
+		if(mvcList[i] == BLACK){
+			flowID = compNode[i].flowID;
+			pathID = compNode[i].pathID;
 			srcID = allFlow[flowID].ingressID;
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;

@@ -23,7 +23,7 @@ bool Dionysus::checkCompete(void){
 	this->compete.createGraph(allFlow);
 
 	// Check cycle
-	if(this->compete.checkCycle()){
+	if(this->compete.needTemp()){
 		hasCompete = true;
 		fprintf(stderr, "Cycle found\n");
 
