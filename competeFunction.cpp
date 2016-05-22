@@ -480,15 +480,12 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	vector<CompRes>copyRes;
 	map<int, int>prev;
 	map<int, bool>vis;
-	map<int, int>recordFlow;
 	queue<BFSNode>que;
-	Flow ftmp;
-	FlowPath ptmp;
 	Link ltmp;
 
 	// Copy the original plan
-	for(int flowID = 0; flowID < (int)allFlow.size(); flowID++)
-		newFlow1.push_back(allFlow[flowID]);
+	newFlow1 = allFlow;
+	newFlow2 = allFlow;
 
 	// Initialize edge structure
 	totalCnt = 5*k*k/4;
@@ -500,12 +497,17 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		if(initLink[i].isWireless)
 			edg[initLink[i].sourceID].push_back(initLink[i].destinationID);
 
-	// WHITE nodes in MVC: final path occupy the resource
+	// WHITE nodes in MVC: no plan change needed
 	for(int i = 0; i < (int)compNode.size(); i++){
 		if(mvcList[i] == WHITE){
 			flowID = compNode[i].flowID;
 			pathID = compNode[i].pathID;
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
+
+			// No flow change in newFlow2
+			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
+
+			// Occupy resource of final path
 			occupyRes(allFlow, flowID, pathID, 1, traffic);
 		}
 	}
@@ -600,42 +602,18 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 					nowID = prev[nowID];
 				}
 
-				// Retrieve new path
-				ptmp.link[0] = newFlow1[flowID].flowPath[pathID].link[1];
-				ptmp.link[1].clear();
-				for(int j = 0; j < (int)allFlow[flowID].flowPath[pathID].link[1].size(); j++)
-					ptmp.link[1].push_back(allFlow[flowID].flowPath[pathID].link[1][j]);
-
-				// New flow
-				if(!recordFlow[flowID]){
-
-					// Add path to new flow plan
-					ftmp.flowID = newFlow2.size();
-					ftmp.flowTag = flowID;
-					ftmp.ingressID = srcID;
-					ftmp.flowPath.push_back(ptmp);
-					newFlow2.push_back(ftmp);
-
-					// Mark as existing
-					recordFlow[flowID] = ftmp.flowID+1;
-
-					// Clear
-					ftmp.flowPath.clear();
-				}
-
-				// Existing flow
-				else{
-
-					// Add to old flow plan
-					newFlow2[ recordFlow[flowID]-1 ].flowPath.push_back(ptmp);
-				}
-
-				// Clear
-				ptmp.link[0].clear();
-				ptmp.link[1].clear();
+				// Update newFlow2
+				newFlow2[flowID].flowPath[pathID].link[0] = newFlow1[flowID].flowPath[pathID].link[1];
 
 				// Update back the original resource usage
 				occupyRes(newFlow1, flowID, pathID, 1, newFlow1[flowID].flowPath[pathID].traffic);
+			}
+
+			// Not found, preserve the original one
+			else{
+
+				// No flow change in newFlow2
+				newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 			}
 
 			// Clear
