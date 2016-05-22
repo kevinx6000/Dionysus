@@ -370,6 +370,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 					flowID = compRes[resID].relList[relID].flowID;
 					pathID = compRes[resID].relList[relID].pathID;
 					compNode[ flowMap[flowID][pathID] ].edge.push_back(etmp);
+					compNode[ etmp.dstID ].prev.push_back(flowMap[flowID][pathID]);
 				}
 			}
 		}
@@ -407,7 +408,8 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 void Compete::backtrack(int now, int cnt, int n){
 
 	// Variable
-	int i, mark;
+	int mark;
+	bool canbe;
 
 	// End
 	if(now == n){
@@ -415,7 +417,7 @@ void Compete::backtrack(int now, int cnt, int n){
 		// Update if better
 		if(cnt < mvcSize){
 			mvcSize = cnt;
-			for(i = 0; i < n; i++)
+			for(int i = 0; i < n; i++)
 				mvcList[i] = visMark[i];
 		}
 		return;
@@ -428,13 +430,24 @@ void Compete::backtrack(int now, int cnt, int n){
 	visMark[now] = VISITED;
 
 	// Check if can be WHITE
-	for(i = 0; i < (int)compNode[now].edge.size(); i++){
+	canbe = true;
+	for(int i = 0; i < (int)compNode[now].edge.size(); i++){
 		mark = visMark[ compNode[now].edge[i].dstID ];
-		if(mark == WHITE) break;
+		if(mark == WHITE){
+			canbe = false;
+			break;
+		}
+	}
+	for(int i = 0; i < (int)compNode[now].prev.size(); i++){
+		mark = visMark[ compNode[now].prev[i] ];
+		if(mark == WHITE){
+			canbe = false;
+			break;
+		}
 	}
 
 	// Can be WHITE
-	if(i == (int)compNode[now].edge.size()){
+	if(canbe){
 		visMark[now] = WHITE;
 		backtrack(now+1, cnt, n);
 	}

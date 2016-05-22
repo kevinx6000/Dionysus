@@ -25,7 +25,7 @@ bool Dionysus::checkCompete(void){
 	// Check cycle
 	if(this->compete.needTemp()){
 		hasCompete = true;
-		fprintf(stderr, "Cycle found\n");
+		fprintf(stderr, "Cycle/Chain found\n");
 
 		// Change old plan to new plan
 		this->compete.changePlan(links, allFlow, newFlow[0], newFlow[1], pod);

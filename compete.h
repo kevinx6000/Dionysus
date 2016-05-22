@@ -57,6 +57,7 @@ class Compete{
 				int flowID;
 				int pathID;
 				vector<CompEdge>edge;
+				vector<int>prev;
 		};
 
 	private:
