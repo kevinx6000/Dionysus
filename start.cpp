@@ -17,10 +17,29 @@ void Dionysus::start(void){
 		numOfPlan = 2;
 
 		// Sort the hops of new transition plan
-		for(int fID = 0; fID < (int)newFlow[1].size(); fID++){
-			for(int pID = 0; pID < (int)newFlow[1][fID].flowPath.size(); pID++){
-				sort(newFlow[1][fID].flowPath[pID].link[0].begin(), newFlow[1][fID].flowPath[pID].link[0].end(), cmpPATH);
-				sort(newFlow[1][fID].flowPath[pID].link[1].begin(), newFlow[1][fID].flowPath[pID].link[1].end(), cmpPATH);
+		for(int state = 0; state < 2; state++){
+			for(int fID = 0; fID < (int)newFlow[state].size(); fID++){
+				for(int pID = 0; pID < (int)newFlow[state][fID].flowPath.size(); pID++){
+					sort(newFlow[state][fID].flowPath[pID].link[0].begin(), newFlow[state][fID].flowPath[pID].link[0].end(), cmpPATH);
+					sort(newFlow[state][fID].flowPath[pID].link[1].begin(), newFlow[state][fID].flowPath[pID].link[1].end(), cmpPATH);
+				}
+			}
+		}
+		
+		// DEBUG
+		for(int state = 0; state < 2; state++){
+			fprintf(stderr, "[Trans%d]:\n", state+1);
+			for(int flowID = 0; flowID < (int)newFlow[state].size(); flowID++){
+				fprintf(stderr, "Flow %d:\n", newFlow[state][flowID].flowID);
+				for(int pathID = 0; pathID < (int)newFlow[state][flowID].flowPath.size(); pathID++){
+					fprintf(stderr, "\tPath %d:\n\tI:", pathID);
+					for(int hop = 0; hop < (int)newFlow[state][flowID].flowPath[pathID].link[0].size(); hop++)
+						fprintf(stderr, " %d-%d", newFlow[state][flowID].flowPath[pathID].link[0][hop].sourceID, newFlow[state][flowID].flowPath[pathID].link[0][hop].destinationID);
+					fprintf(stderr, "\n\tF:");
+					for(int hop = 0; hop < (int)newFlow[state][flowID].flowPath[pathID].link[1].size(); hop++)
+						fprintf(stderr, " %d-%d", newFlow[state][flowID].flowPath[pathID].link[1][hop].sourceID, newFlow[state][flowID].flowPath[pathID].link[1][hop].destinationID);
+					fprintf(stderr, "\n");
+				}
 			}
 		}
 	}
