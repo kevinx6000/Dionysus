@@ -483,18 +483,11 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	// Variable
 	int totalCnt;
 	int srcID, dstID;
-	int flowID, pathID, linkID;
-	int nowID, nxtID;
-	bool done, interOK;
+	int flowID, pathID;
 	double traffic;
-	BFSNode bfsNow, bfsNxt;
 	vector<int>etmp;
 	vector< vector<int> >edg;
-	vector<CompRes>copyRes;
-	map<int, int>prev;
-	map<int, bool>vis;
-	queue<BFSNode>que;
-	Link ltmp;
+	vector<Link>newPath;
 
 	// Copy the original plan
 	newFlow1 = allFlow;
@@ -534,86 +527,11 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
-			// Copy resource usage
-			bfsNow.interCap.clear();
-			for(int j = 0; j < (int)compRes.size(); j++){
-				copyRes.push_back(compRes[j]);
-				if(copyRes[j].resType == INTER_RES)
-					bfsNow.interCap[ copyRes[j].srcID ] = LINK_CAPACITY-copyRes[j].resCap;
-			}
-
-			// BFS
-			done = false;
-			bfsNow.switchID = srcID;
-			que.push(bfsNow);
-			vis[srcID] = true;
-			prev[srcID] = srcID;
-			while(!que.empty() && !done){
-				bfsNow = que.front();
-				nowID = bfsNow.switchID;
-				que.pop();
-				if(copyRes[ trancMap[nowID] ].resCap < traffic) continue;
-
-				// Search neighbor
-				for(int j = 0; j < (int)edg[nowID].size(); j++){
-					nxtID = edg[nowID][j];
-					bfsNxt = bfsNow;
-					bfsNxt.switchID = nxtID;
-					if(copyRes[ trancMap[nxtID] ].resCap < traffic) continue;
-
-					// Un-visited
-					if(!vis[nxtID]){
-
-						// Check interference
-						interOK = true;
-						linkID = linkMap[nowID][nxtID];
-						for(int k = 0; k < (int)copyRes[linkID].iList.size(); k++){
-							if(bfsNow.interCap[ copyRes[ copyRes[linkID].iList[k] ].srcID ] + traffic > LINK_CAPACITY){
-								interOK = false;
-								break;
-							}
-							else{
-								// Update
-								bfsNxt.interCap[ copyRes[ copyRes[linkID].iList[k] ].srcID ] += traffic;
-							}
-						}
-
-						// Feasible
-						if(interOK){
-							que.push(bfsNxt);
-							vis[nxtID] = true;
-							prev[nxtID] = nowID;
-
-							// Destination
-							if(nxtID == dstID){
-								done = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			// If found
-			if(done){
-
-				// DEBUG: print out path
-				nowID = dstID;
-				while(nowID != srcID){
-					fprintf(stderr, "%d <-- ", nowID);
-					nowID = prev[nowID];
-				}
-				fprintf(stderr, "%d\n", srcID);
+			// Alternative path
+			if(alterPath(edg, compRes, srcID, dstID, traffic, newPath)){
 
 				// Modify flow transition info in newFlow1
-				newFlow1[flowID].flowPath[pathID].link[1].clear();
-				nowID = dstID;
-				while(nowID != srcID){
-					ltmp.sourceID = prev[nowID];
-					ltmp.destinationID = nowID;
-					newFlow1[flowID].flowPath[pathID].link[1].push_back(ltmp);
-					nowID = prev[nowID];
-				}
+				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
 
 				// Update newFlow2
 				newFlow2[flowID].flowPath[pathID].link[0] = newFlow1[flowID].flowPath[pathID].link[1];
@@ -628,12 +546,6 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 				// No flow change in newFlow2
 				newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 			}
-
-			// Clear
-			vis.clear();
-			prev.clear();
-			copyRes.clear();
-			while(!que.empty()) que.pop();
 		}
 	}
 }
@@ -662,6 +574,112 @@ void Compete::occupyRes(const vector<Flow>& flowPlan, int flowID, int pathID, in
 				compRes[ compRes[linkID].iList[z] ].resCap -= traffic;
 		}
 	}
+}
+
+// Alternative path searching
+bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>& curRes, int srcID, int dstID, double traffic, vector<Link>& newPath){
+
+	// Variable
+	int nowID, nxtID, linkID;
+	bool done, interOK;
+	BFSNode bfsNow, bfsNxt;
+	vector<CompRes>copyRes;
+	queue<BFSNode>que;
+	map<int, int>prev;
+	map<int, bool>vis;
+	Link ltmp;
+
+	// Copy resource usage
+	bfsNow.interCap.clear();
+	for(int i = 0; i < (int)curRes.size(); i++){
+		copyRes.push_back(curRes[i]);
+		if(copyRes[i].resType == INTER_RES){
+			bfsNow.interCap[ copyRes[i].srcID ] = LINK_CAPACITY-copyRes[i].resCap;
+		}
+	}
+
+	// BFS
+	done = false;
+	bfsNow.switchID = srcID;
+	que.push(bfsNow);
+	vis[srcID] = true;
+	prev[srcID] = srcID;
+	while(!que.empty() && !done){
+		bfsNow = que.front();
+		nowID = bfsNow.switchID;
+		que.pop();
+		if(copyRes[ trancMap[nowID] ].resCap < traffic) continue;
+
+		// Search neighbor
+		for(int i = 0; i < (int)edg[nowID].size(); i++){
+			nxtID = edg[nowID][i];
+			bfsNxt = bfsNow;
+			bfsNxt.switchID = nxtID;
+			if(copyRes[ trancMap[nxtID] ].resCap < traffic) continue;
+
+			// Un-visited
+			if(!vis[nxtID]){
+
+				// Check interference
+				interOK = true;
+				linkID = linkMap[nowID][nxtID];
+				for(int j = 0; j < (int)copyRes[linkID].iList.size(); j++){
+					if(bfsNow.interCap[ copyRes[ copyRes[linkID].iList[j] ].srcID ] + traffic > LINK_CAPACITY){
+						interOK = false;
+						break;
+					}
+					else{
+						// Update
+						bfsNxt.interCap[ copyRes[ copyRes[linkID].iList[j] ].srcID ] += traffic;
+					}
+				}
+
+				// Feasible
+				if(interOK){
+					que.push(bfsNxt);
+					vis[nxtID] = true;
+					prev[nxtID] = nowID;
+
+					// Destination
+					if(nxtID == dstID){
+						done = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// Path found
+	if(done){
+
+		// DEBUG: print out path
+		nowID = dstID;
+		while(nowID != srcID){
+			fprintf(stderr, "%d <-- ", nowID);
+			nowID = prev[nowID];
+		}
+		fprintf(stderr, "%d\n", srcID);
+
+		// Retrieve new path
+		newPath.clear();
+		nowID = dstID;
+		while(nowID != srcID){
+			ltmp.sourceID = prev[nowID];
+			ltmp.destinationID = nowID;
+			newPath.push_back(ltmp);
+			nowID = prev[nowID];
+		}
+	}
+
+	// Clear (not necessary)
+	vis.clear();
+	prev.clear();
+	copyRes.clear();
+	while(!que.empty()) que.pop();
+
+	// Return true if found
+	return done;
 }
 
 // Destructure

@@ -82,16 +82,17 @@ class Compete{
 		vector<CompRes>compRes;			// Record the remaining resource
 		vector<CompNode>compNode;		// Compete graph
 
-	/* For minimum vertex cover */
 	private:
+		/* For minimum vertex cover */
 		int mvcSize;
 		vector<int>mvcList;
 		map<int, int>visMark;
 		
-	/* Private function */
 	private:
+		/* Private function */
 		void backtrack(int, int, int);
 		void occupyRes(const vector<Flow>&, int, int, int, double);
+		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, int, int, double, vector<Link>&);
 };
 
 #endif
