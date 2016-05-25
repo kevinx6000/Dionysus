@@ -609,6 +609,7 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 		nowID = bfsNow.switchID;
 		que.pop();
 		if(copyRes[ trancMap[nowID] ].resCap < traffic) continue;
+		copyRes[ trancMap[nowID] ].resCap -= traffic;
 
 		// Search neighbor
 		for(int i = 0; i < (int)edg[nowID].size(); i++){
@@ -616,6 +617,7 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 			bfsNxt = bfsNow;
 			bfsNxt.switchID = nxtID;
 			if(copyRes[ trancMap[nxtID] ].resCap < traffic) continue;
+			copyRes[ trancMap[nxtID] ].resCap -= traffic;
 
 			// Un-visited
 			if(!vis[nxtID]){
