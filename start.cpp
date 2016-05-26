@@ -11,6 +11,11 @@ void Dionysus::start(void){
 	bool isScheduled;
 	bool isDeadlock;
 
+	// Initialize counters
+	addRuleCnt = 0;
+	modRuleCnt = 0;
+	delRuleCnt = 0;
+
 	// Run until all update is finished
 	while(true){
 

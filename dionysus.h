@@ -13,6 +13,7 @@ class Dionysus{
 		void genDepGraph(void);					// Generate dependency graph
 		void start(void);						// Start scheduling
 		void debug(void);						// For debugging
+		void statistic(void);					// Output statistic report
 	private:
 		vector<Switch>switches;					// Switch node
 		vector<Link>links;						// Link node
@@ -23,6 +24,9 @@ class Dionysus{
 		vector<Flow>allFlow;					// All flows
 		vector<Node>nodes;						// List of node in dependency graph
 		vector<int>mapID;						// Record the mapping from 'actual ID' to 'current index'
+		int addRuleCnt;							// Total number of add rule
+		int modRuleCnt;							// Total number of modify rule
+		int delRuleCnt;							// Total number of delete rule
 		void requireCap(int, int, int, double);	// Require link capacity (add dependency)
 		void releaseCap(int, int, int, double);	// Release link capacity (add dependency)
 		void updateGraph(void);					// Update current dependency graph
