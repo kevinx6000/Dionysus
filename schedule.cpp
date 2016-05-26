@@ -29,6 +29,7 @@ void Dionysus::schedule(int owDpID){
 			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
 				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]/totTraffic);
 			fprintf(stderr, "\n");
+			addRuleCnt++;
 		}
 
 		// Modify rules
@@ -40,6 +41,7 @@ void Dionysus::schedule(int owDpID){
 		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
 			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]/totTraffic);
 		fprintf(stderr, "\n");
+		modRuleCnt++;
 
 		// Delete rules
 		odDpID = -1;
@@ -49,8 +51,10 @@ void Dionysus::schedule(int owDpID){
 				break;
 			}
 		odID = nodes[odDpID].nodeIndex;
-		for(int i = 0; i < (int)operations[odID].ruleSet.size(); i++)
+		for(int i = 0; i < (int)operations[odID].ruleSet.size(); i++){
 			fprintf(stderr, "Delete rules @ switch %d\n", operations[odID].ruleSet[i].switchID);
+			delRuleCnt++;
+		}
 
 		// Mark three operation nodes as finished
 		operations[oaID].isFinished = true;

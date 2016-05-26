@@ -18,6 +18,7 @@ class Dionysus{
 		void debug(void);						// For debugging
 		bool checkCompete(void);				// Check if cycling/chaining exists
 		void reset(void);						// Reset all data structure EXCEPT topology
+		void statistic(void);					// Output statistic report
 
 	private:
 		int pod;								// Pod count of fattree
@@ -32,6 +33,9 @@ class Dionysus{
 		vector<int>mapID;						// Record the mapping from 'actual ID' to 'current index'
 		vector<Flow>newFlow[2];					// New transition plan
 		Compete compete;						// Cycling/Chaining checker
+		int addRuleCnt;							// Total number of add rule
+		int modRuleCnt;							// Total number of modify rule
+		int delRuleCnt;							// Total number of delete rule
 	
 	private:
 		void requireCap(int, int, int, double);		// Require link capacity (add dependency)

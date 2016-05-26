@@ -12,6 +12,11 @@ void Dionysus::start(void){
 	bool isScheduled;
 	bool isDeadlock;
 
+	// Initialize counters
+	addRuleCnt = 0;
+	modRuleCnt = 0;
+	delRuleCnt = 0;
+
 	// Check cycling/chaining effect
 	if(checkCompete()){
 		numOfPlan = 2;

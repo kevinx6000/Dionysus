@@ -20,5 +20,8 @@ int main(void)
 	// DEBUG
 	simulator.debug();
 
+	// Statistic result
+	simulator.statistic();
+
 	return 0;
 }
