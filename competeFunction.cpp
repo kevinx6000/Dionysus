@@ -538,6 +538,9 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 
 				// Update back the original resource usage
 				occupyRes(newFlow1, flowID, pathID, 1, newFlow1[flowID].flowPath[pathID].traffic);
+
+				// DEBUG message
+				fprintf(stderr, "[Info] Alternative path found\n");
 			}
 
 			// Not found, preserve the original one
@@ -545,6 +548,9 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 
 				// No flow change in newFlow2
 				newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
+
+				// DEBUG message
+				fprintf(stderr, "[Info] Alternative path not found, preserve original path\n");
 			}
 		}
 	}
