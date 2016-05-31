@@ -71,6 +71,21 @@ class Compete{
 				int switchID;
 				map<int, double>interCap;
 		};
+	
+	private:
+		/* Resource difference node */
+		class ResDiffNode{
+			public:
+				int ID;
+				double reqTraffic;
+				double relTraffic;
+		};
+		class ResDiff{
+			public:
+				vector<ResDiffNode>link;
+				vector<ResDiffNode>tranc;
+				vector<ResDiffNode>inter;
+		};
 		
 	private:
 		bool isInitLink;				// Record if link resource is initialized
@@ -92,7 +107,9 @@ class Compete{
 		/* Private function */
 		void backtrack(int, int, int);
 		void occupyRes(const vector<Flow>&, int, int, int, double);
+		void resDiffCheck(int, FlowPath&, ResDiff&);
 		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, int, int, double, vector<Link>&);
+		static bool cmpHop(Link, Link);
 };
 
 #endif

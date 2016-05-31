@@ -488,6 +488,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	vector<int>etmp;
 	vector< vector<int> >edg;
 	vector<Link>newPath;
+	ResDiff resDiff;
 
 	// Copy the original plan
 	newFlow1 = allFlow;
@@ -503,41 +504,49 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		if(initLink[i].isWireless)
 			edg[initLink[i].sourceID].push_back(initLink[i].destinationID);
 
-	// WHITE nodes in MVC: no plan change needed
-	for(int i = 0; i < (int)compNode.size(); i++){
-		if(mvcList[i] == WHITE){
-			flowID = compNode[i].flowID;
-			pathID = compNode[i].pathID;
-			traffic = allFlow[flowID].flowPath[pathID].traffic;
+	// Occupy all initial and final resource (regardless of having alternative path or not)
+	for(int flowID = 0; flowID < (int)newFlow1.size(); flowID++){
+		for(int pathID = 0; pathID < (int)newFlow1[flowID].flowPath.size(); pathID++){
 
-			// No flow change in newFlow2
-			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
+			// Check resource difference
+			resDiffCheck(newFlow1[flowID].ingressID, newFlow1[flowID].flowPath[pathID], resDiff);
 
-			// Occupy resource of final path
-			occupyRes(allFlow, flowID, pathID, 1, traffic);
+			// Update the requiring part
+			for(int i = 0; i < (int)resDiff.link.size(); i++)
+				compRes[ resDiff.link[i].ID ].resCap += resDiff.link[i].reqTraffic;
+			for(int i = 0; i < (int)resDiff.tranc.size(); i++)
+				compRes[ resDiff.tranc[i].ID ].resCap += resDiff.tranc[i].reqTraffic;
+			for(int i = 0; i < (int)resDiff.inter.size(); i++)
+				compRes[ resDiff.inter[i].ID ].resCap += resDiff.inter[i].reqTraffic;
 		}
 	}
 
-	// BLACK nodes in MVC: find out alternative path
+	// For all nodes in competitive graph
 	for(int i = 0; i < (int)compNode.size(); i++){
-		if(mvcList[i] == BLACK){
-			flowID = compNode[i].flowID;
-			pathID = compNode[i].pathID;
+		flowID = compNode[i].flowID;
+		pathID = compNode[i].pathID;
+
+		// WHITE nodes in MVC: no plan change needed
+		if(mvcList[i] == WHITE){
+
+			// Copy: I -> F, F -> F
+			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
+		}
+
+		// Black nodes in MVC: find out alternative path
+		else if(mvcList[i] == BLACK){
 			srcID = allFlow[flowID].ingressID;
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
-			// Alternative path
+			// Try to find out an alternative path
 			if(alterPath(edg, compRes, srcID, dstID, traffic, newPath)){
 
-				// Modify flow transition info in newFlow1
+				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
 
-				// Update newFlow2
-				newFlow2[flowID].flowPath[pathID].link[0] = newFlow1[flowID].flowPath[pathID].link[1];
-
-				// Update back the original resource usage
-				occupyRes(newFlow1, flowID, pathID, 1, newFlow1[flowID].flowPath[pathID].traffic);
+				// Set new path as initial state of newFlow2: F' -> F
+				newFlow2[flowID].flowPath[pathID].link[0] = newPath;
 
 				// DEBUG message
 				fprintf(stderr, "[Info] Alternative path found\n");
@@ -546,12 +555,18 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			// Not found, preserve the original one
 			else{
 
-				// No flow change in newFlow2
+				// Copy: I -> F, F -> F
 				newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 
 				// DEBUG message
 				fprintf(stderr, "[Info] Alternative path not found, preserve original path\n");
 			}
+		}
+
+		// Exception
+		else{
+			fprintf(stderr, "[Error] Color except white or black exists.\n");
+			exit(1);
 		}
 	}
 }
@@ -688,6 +703,257 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 
 	// Return true if found
 	return done;
+}
+
+// Resource difference checker
+void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
+
+	// Variables
+	int ptr1, ptr2, ingPtr1, ingPtr2;
+	int sID1, sID2, dID1, dID2, linkID, interID;
+	int siz1, siz2;
+	int relCnt, reqCnt;
+	double traffic;
+	set<int>trancSwitch;
+	set<int>interSwitch;
+	set<int>::iterator setItr;
+	ResDiffNode rtmp;
+
+	// Sort initial and final hops
+	sort(flowPath.link[0].begin(), flowPath.link[0].end(), cmpHop);
+	sort(flowPath.link[1].begin(), flowPath.link[1].end(), cmpHop);
+
+	// Initialize transceiver and interference resource to zero
+	trancSwitch.clear();
+	interSwitch.clear();
+	for(int state = 0; state < 2; state++){
+		for(int hop = 0; hop < (int)flowPath.link[state].size(); hop++){
+			sID1 = flowPath.link[state][hop].sourceID;
+			dID1 = flowPath.link[state][hop].destinationID;
+			linkID = linkMap[sID1][dID1];
+			if(compRes[linkID].isWireless){
+				compRes[ trancMap[sID1] ].relCnt = 0;
+				compRes[ trancMap[sID1] ].reqCnt = 0;
+				compRes[ trancMap[dID1] ].relCnt = 0;
+				compRes[ trancMap[dID1] ].reqCnt = 0;
+				trancSwitch.insert(trancMap[sID1]);
+				trancSwitch.insert(trancMap[dID1]);
+				for(int x = 0; x < (int)compRes[linkID].iList.size(); x++){
+					interID = compRes[linkID].iList[x];
+					compRes[interID].relCnt = 0;
+					compRes[interID].reqCnt = 0;
+					interSwitch.insert(interID);
+				}
+			}
+		}
+	}
+
+	// Initialize resource difference variable
+	resDiff.link.clear();
+	resDiff.tranc.clear();
+	resDiff.inter.clear();
+	
+	// Check the difference between initial and final state
+	ptr1 = ptr2 = 0;
+	siz1 = flowPath.link[0].size();
+	siz2 = flowPath.link[1].size();
+	traffic = flowPath.traffic;
+	while(ptr1 < siz1 && ptr2 < siz2){
+		sID1 = flowPath.link[0][ptr1].sourceID;
+		dID1 = flowPath.link[0][ptr1].destinationID;
+		sID2 = flowPath.link[1][ptr2].sourceID;
+		dID2 = flowPath.link[1][ptr2].destinationID;
+		if(sID1 == ingressID){
+			ingPtr1 = ptr1++;
+			continue;
+		}
+		if(sID2 == ingressID){
+			ingPtr2 = ptr2++;
+			continue;
+		}
+
+		// Same switch
+		if(sID1 == sID2){
+			if(dID1 != dID2){
+
+				// Release link: sID1-dID1
+				rtmp.ID = linkMap[sID1][dID1];
+				rtmp.reqTraffic = 0;
+				rtmp.relTraffic = traffic;
+				resDiff.link.push_back(rtmp);
+
+				// Require link: sID2-dID2
+				rtmp.ID = linkMap[sID2][dID2];
+				rtmp.reqTraffic = traffic;
+				rtmp.relTraffic = 0;
+				resDiff.link.push_back(rtmp);
+			}
+			ptr1++;
+			ptr2++;
+		}
+
+		// Add switch sID2
+		else if(sID1 > sID2){
+
+			// Require link: sID2-dID2
+			rtmp.ID = linkMap[sID2][dID2];
+			rtmp.reqTraffic = traffic;
+			rtmp.relTraffic = 0;
+			resDiff.link.push_back(rtmp);
+			ptr2++;
+		}
+
+		// Del switch sID1
+		else{
+
+			// Release link: sID1-dID1
+			rtmp.ID = linkMap[sID1][dID1];
+			rtmp.reqTraffic = 0;
+			rtmp.relTraffic = traffic;
+			resDiff.link.push_back(rtmp);
+			ptr1++;
+		}
+	}
+
+	// Remaining old switches
+	while(ptr1 < siz1){
+		sID1 = flowPath.link[0][ptr1].sourceID;
+		dID1 = flowPath.link[0][ptr1].destinationID;
+		if(sID1 == ingressID){
+			ingPtr1 = ptr1++;
+			continue;
+		}
+		// Release link: sID1-dID1
+		rtmp.ID = linkMap[sID1][dID1];
+		rtmp.reqTraffic = 0;
+		rtmp.relTraffic = traffic;
+		resDiff.link.push_back(rtmp);
+		ptr1++;
+	}
+
+	// Remaining new switches
+	while(ptr2 < siz2){
+		sID2 = flowPath.link[1][ptr2].sourceID;
+		dID2 = flowPath.link[1][ptr2].destinationID;
+		if(sID2 == ingressID){
+			ingPtr2 = ptr2++;
+			continue;
+		}
+		// Require link: sID2-dID2
+		rtmp.ID = linkMap[sID2][dID2];
+		rtmp.reqTraffic = traffic;
+		rtmp.relTraffic = 0;
+		resDiff.link.push_back(rtmp);
+		ptr2++;
+	}
+
+	// Ingress switch
+	sID1 = ingressID;
+	dID1 = flowPath.link[0][ingPtr1].destinationID;
+	dID2 = flowPath.link[1][ingPtr2].destinationID;
+	if(dID1 != dID2){
+
+		// Release link: sID1-dID1
+		rtmp.ID = linkMap[sID1][dID1];
+		rtmp.reqTraffic = 0;
+		rtmp.relTraffic = traffic;
+		resDiff.link.push_back(rtmp);
+
+		// Require link: sID1-dID2
+		rtmp.ID = linkMap[sID1][dID2];
+		rtmp.reqTraffic = traffic;
+		rtmp.relTraffic = 0;
+		resDiff.link.push_back(rtmp);
+	}
+
+	// Release/require count for transceiver and interference resource
+	for(int state = 0; state < 2; state++){
+		for(int hop = 0; hop < (int)flowPath.link[state].size(); hop++){
+			sID1 = flowPath.link[state][hop].sourceID;
+			dID1 = flowPath.link[state][hop].destinationID;
+			linkID = linkMap[sID1][dID1];
+			if(compRes[linkID].isWireless){
+
+				// Release
+				if(state < 1){
+					compRes[ trancMap[sID1] ].relCnt ++;
+					compRes[ trancMap[dID1] ].relCnt ++;
+					for(int x = 0; x < (int)compRes[linkID].iList.size(); x++){
+						interID = compRes[linkID].iList[x];
+						compRes[interID].relCnt ++;
+					}
+				}
+
+				// Require
+				else{
+					compRes[ trancMap[sID1] ].reqCnt ++;
+					compRes[ trancMap[dID1] ].reqCnt ++;
+					for(int x = 0; x < (int)compRes[linkID].iList.size(); x++){
+						interID = compRes[linkID].iList[x];
+						compRes[interID].reqCnt ++;
+					}
+				}
+			}
+		}
+	}
+	
+	// Check transceiver/interference resource difference
+	for(setItr = trancSwitch.begin(); setItr != trancSwitch.end(); setItr++){
+		relCnt = compRes[ *setItr ].relCnt;
+		reqCnt = compRes[ *setItr ].reqCnt;
+		if(relCnt < reqCnt){
+
+			// Require tranc: (reqCnt - relCnt) * traffic
+			rtmp.ID = *setItr;
+			rtmp.reqTraffic = (reqCnt - relCnt) * traffic;
+			rtmp.relTraffic = 0;
+			resDiff.tranc.push_back(rtmp);
+		}
+		else if(relCnt > reqCnt){
+
+			// Release tranc: (relCnt - reqCnt) * traffic
+			rtmp.ID = *setItr;
+			rtmp.reqTraffic = 0;
+			rtmp.relTraffic = (relCnt - reqCnt) * traffic;
+			resDiff.tranc.push_back(rtmp);
+		}
+	}
+	for(setItr = interSwitch.begin(); setItr != interSwitch.end(); setItr++){
+		relCnt = compRes[ *setItr ].relCnt;
+		reqCnt = compRes[ *setItr ].reqCnt;
+		if(relCnt < reqCnt){
+
+			// Require tranc: (reqCnt - relCnt) * traffic
+			rtmp.ID = *setItr;
+			rtmp.reqTraffic = (reqCnt - relCnt) * traffic;
+			rtmp.relTraffic = 0;
+			resDiff.inter.push_back(rtmp);
+		}
+		else if(relCnt > reqCnt){
+
+			// Release tranc: (relCnt - reqCnt) * traffic
+			rtmp.ID = *setItr;
+			rtmp.reqTraffic = 0;
+			rtmp.relTraffic = (relCnt - reqCnt) * traffic;
+			resDiff.inter.push_back(rtmp);
+		}
+	}
+
+	// DEBUG
+	fprintf(stderr, "[Info] Resource Diff (link)\n");
+	for(int i = 0; i < (int)resDiff.link.size(); i++)
+		fprintf(stderr, "[Info]\t%d-%d: req=%.2lf, rel=%.2lf\n", compRes[resDiff.link[i].ID].srcID, compRes[resDiff.link[i].ID].dstID, resDiff.link[i].reqTraffic, resDiff.link[i].relTraffic);
+	fprintf(stderr, "[Info] Resource Diff (tranc)\n");
+	for(int i = 0; i < (int)resDiff.tranc.size(); i++)
+		fprintf(stderr, "[Info]\t%d: req=%.2lf, rel=%.2lf\n", compRes[resDiff.tranc[i].ID].srcID, resDiff.tranc[i].reqTraffic, resDiff.tranc[i].relTraffic);
+	fprintf(stderr, "[Info] Resource Diff (inter)\n");
+	for(int i = 0; i < (int)resDiff.inter.size(); i++)
+		fprintf(stderr, "[Info]\t%d: req=%.2lf, rel=%.2lf\n", compRes[resDiff.inter[i].ID].srcID, resDiff.inter[i].reqTraffic, resDiff.inter[i].relTraffic);
+}
+
+// Comparison function for sorting hops
+bool Compete::cmpHop(Link A, Link B){
+	return A.sourceID < B.sourceID;
 }
 
 // Destructure
