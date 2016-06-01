@@ -741,11 +741,13 @@ clock_t begTime = clock();
 		que.pop();
 
 		// Search neighbor
+int cntNei = 0;
 		for(int i = 0; i < (int)edg[nowID].size(); i++){
 			nxtID = edg[nowID][i];
 			if(!vis[nxtID]){
 				bfsNxt = bfsNow;
 				bfsNxt.switchID = nxtID;
+cntNei ++;
 
 				// Stage1: not in original plan -> new requiring resource
 				if(!used1[nowID][nxtID]){
@@ -838,6 +840,7 @@ clock_t begTime = clock();
 				}
 			}
 		}
+fprintf(stderr, "[Info] # of neighbor checks = %d\n", cntNei);
 	}
 clock_t endTime = clock();
 fprintf(stderr, "[Info] time = %.2lf msec\n", (endTime - begTime) / 1000.0);
