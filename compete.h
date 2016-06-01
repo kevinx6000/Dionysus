@@ -66,10 +66,19 @@ class Compete{
 
 	private:
 		/* BFS node */
+		class BFSNodeHelp{
+			public:
+				map<int, int>interCnt;
+				map<int, double>linkCap;
+				map<int, double>trancCap;
+				map<int, double>interCap;
+
+		};
 		class BFSNode{
 			public:
 				int switchID;
-				map<int, double>interCap;
+				BFSNodeHelp stage1;
+				BFSNodeHelp stage2;
 		};
 	
 	private:
@@ -94,7 +103,8 @@ class Compete{
 		map<int, int>trancMap;			// Map the index from src to transceiver node ID
 		map<int, int>interMap;			// Map the index from src to interference node ID
 		vector< map<int, int> >linkMap;	// Map the index from (src,dst) to link resource ID
-		vector<CompRes>compRes;			// Record the remaining resource
+		vector<CompRes>compRes;			// Record the remaining resource (initial state)
+		vector<CompRes>lastRes;			// Record the remaining resource (final state)
 		vector<CompNode>compNode;		// Compete graph
 
 	private:
@@ -107,8 +117,9 @@ class Compete{
 		/* Private function */
 		void backtrack(int, int, int);
 		void occupyRes(const vector<Flow>&, int, int, int, double);
+		void occupyRes(const vector<Link>&, double, vector<CompRes>&);
 		void resDiffCheck(int, FlowPath&, ResDiff&);
-		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, int, int, double, vector<Link>&);
+		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&);
 		static bool cmpHop(Link, Link);
 };
 
