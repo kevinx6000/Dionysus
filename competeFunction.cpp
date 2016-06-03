@@ -551,11 +551,8 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
-			// It's impossible to find out a path using wireless links with traffic*2 > LINK_CAPACITY
-
 			// Try to find out an alternative path
-			if(traffic * 2 <= LINK_CAPACITY &&
-				alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2)){
+			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2)){
 
 				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
