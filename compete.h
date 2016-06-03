@@ -108,10 +108,16 @@ class Compete{
 		vector<CompNode>compNode;		// Compete graph
 
 	private:
-		/* For minimum vertex cover */
-		int mvcSize;
-		vector<int>mvcList;
-		map<int, int>visMark;
+		/* For greedy vertex cover */
+		class GVCNode{
+			public:
+				int ID;
+				int degree;
+		};
+		int gvcSize;
+		vector<int>gvcCnt;
+		vector<int>gvcList;
+		vector<GVCNode>gvcNode;
 		
 	private:
 		/* Private function */
@@ -121,6 +127,7 @@ class Compete{
 		void resDiffCheck(int, FlowPath&, ResDiff&);
 		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&);
 		static bool cmpHop(Link, Link);
+		static bool cmpGVC(GVCNode, GVCNode);
 };
 
 #endif

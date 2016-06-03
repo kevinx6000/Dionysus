@@ -380,7 +380,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	}
 
 	// DEBUG: compete graph
-	/*
+	/**/
 	for(int nodeID = 0; nodeID < (int)compNode.size(); nodeID++){
 		if(compNode[nodeID].edge.size() > 0){
 			fprintf(stderr, "%d/%d:\n", compNode[nodeID].flowID, compNode[nodeID].pathID);
@@ -404,80 +404,142 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 			fprintf(stderr, "\n");
 		}
 	}
-	*/
-}
-
-// Backtracking for vertex cover
-void Compete::backtrack(int now, int cnt, int n){
-
-	// Variable
-	int mark;
-	bool canbe;
-
-	// End
-	if(now == n){
-		
-		// Update if better
-		if(cnt < mvcSize){
-			mvcSize = cnt;
-			for(int i = 0; i < n; i++)
-				mvcList[i] = visMark[i];
-		}
-		return;
-	}
-
-	// Prune: never smaller than current
-	if(cnt >= mvcSize) return;
-
-	// Visit
-	visMark[now] = VISITED;
-
-	// Check if can be WHITE
-	canbe = true;
-	for(int i = 0; i < (int)compNode[now].edge.size(); i++){
-		mark = visMark[ compNode[now].edge[i].dstID ];
-		if(mark == WHITE){
-			canbe = false;
-			break;
-		}
-	}
-	for(int i = 0; i < (int)compNode[now].prev.size(); i++){
-		mark = visMark[ compNode[now].prev[i] ];
-		if(mark == WHITE){
-			canbe = false;
-			break;
-		}
-	}
-
-	// Can be WHITE
-	if(canbe){
-		visMark[now] = WHITE;
-		backtrack(now+1, cnt, n);
-	}
-
-	// Always can be BLACK
-	visMark[now] = BLACK;
-	backtrack(now+1, cnt+1, n);
-
-	// Leave
-	visMark[now] = NOT_VISITED;
+	/**/
 }
 
 // Check if temporary resource is needed
 bool Compete::needTemp(void){
 
-	// Initialize
-	mvcSize = compNode.size();
-	mvcList.clear();
-	for(int i = 0; i < mvcSize; i++)
-		mvcList.push_back(NOT_VISITED);
-	visMark.clear();
+	// Variable
+	int curID, nxtID;
+	bool uncovered, more;
+	map<int, bool>used;
+	GVCNode gtmp;
 
-	// Minimum Vertex Cover
-	backtrack(0, 0, compNode.size());
+	// Initialize
+	gvcSize = 0;
+	gvcCnt.clear();
+	gvcList.clear();
+	gvcNode.clear();
+	for(int i = 0; i < (int)compNode.size(); i++){
+		gtmp.ID = i;
+		gtmp.degree = compNode[i].edge.size() + compNode[i].prev.size();
+		gvcNode.push_back(gtmp);
+		gvcCnt.push_back(0);
+		gvcList.push_back(NOT_VISITED);
+	}
+
+	// Sort degree decreasingly
+	sort(gvcNode.begin(), gvcNode.end(), cmpGVC);
+
+	// Greedy: step1 - pick from highest degree
+	for(int i = 0; i < (int)gvcNode.size(); i++){
+		curID = gvcNode[i].ID;
+		uncovered = false;
+
+		// Only node with at least one neighbor should color
+		if(gvcNode[i].degree > 0){
+
+			// Self
+			if(gvcCnt[curID] == 0) uncovered = true;
+
+			// Neighbor
+			else{		
+				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
+					if(gvcCnt[ compNode[curID].edge[j].dstID ] == 0){
+						uncovered = true;
+						break;
+					}
+				}
+				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
+					if(gvcCnt[ compNode[curID].prev[j] ] == 0){
+						uncovered = true;
+						break;
+					}
+				}
+			}
+		}
+
+		// At least one node not covered yet: color self
+		if(uncovered){
+			gvcSize++;
+			gvcCnt[curID]++;
+			used.clear();
+			for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
+				nxtID = compNode[curID].edge[j].dstID;
+				if(!used[nxtID]){
+					gvcCnt[nxtID]++;
+					used[nxtID] = true;
+				}
+			}
+			for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
+				nxtID = compNode[curID].prev[j];
+				if(!used[nxtID]){
+					gvcCnt[nxtID]++;
+					used[nxtID] = true;
+				}
+			}
+			gvcList[curID] = BLACK;
+		}
+
+		// All neighbors are covered (including self)
+		else gvcList[curID] = WHITE;
+	}
+
+	fprintf(stderr, "Cur = %d\n", gvcSize);
+
+	// Greedy: step2 - remove redundant node
+	for(int i = 0; i < (int)gvcNode.size(); i++){
+		curID = gvcNode[i].ID;
+
+		// For each chosen node
+		if(gvcList[curID] == BLACK){
+			more = true;
+
+			// All neighbors are colered more than once (including self)
+			if(gvcCnt[curID] == 1) more = false;
+			else{
+				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
+					if(gvcCnt[ compNode[curID].edge[j].dstID ] == 1){
+						more = false;
+						break;
+					}
+				}
+				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
+					if(gvcCnt[ compNode[curID].prev[j] ] == 1){
+						more = false;
+						break;
+					}
+				}
+			}
+
+			// Can remove
+			if(more){
+				gvcSize--;
+				gvcCnt[curID]--;
+				used.clear();
+				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
+					nxtID = compNode[curID].edge[j].dstID;
+					if(!used[nxtID]){
+						gvcCnt[nxtID]--;
+						used[nxtID] = true;
+					}
+				}
+				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
+					nxtID = compNode[curID].prev[j];
+					if(!used[nxtID]){
+						gvcCnt[nxtID]--;
+						used[nxtID] = true;
+					}
+				}
+				gvcList[curID] = WHITE;
+			}
+		}
+	}
 
 	// Return checking result
-	return mvcSize > 0;
+	fprintf(stderr, "GVC cnt = %d\n", gvcSize);
+	return gvcSize > 0;
 }
 
 // Change current plan to new plan
@@ -512,7 +574,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	for(int i = 0; i < (int)compNode.size(); i++){
 		flowID = compNode[i].flowID;
 		pathID = compNode[i].pathID;
-		if(mvcList[i] == WHITE){
+		if(gvcList[i] == WHITE){
 
 			// Update the requiring part
 			resDiffCheck(newFlow1[flowID].ingressID, newFlow1[flowID].flowPath[pathID], resDiff);
@@ -539,23 +601,20 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		pathID = compNode[i].pathID;
 
 		// WHITE nodes in MVC: no plan change needed
-		if(mvcList[i] == WHITE){
+		if(gvcList[i] == WHITE){
 
 			// Copy: I -> F, F -> F
 			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 		}
 
 		// Black nodes in MVC: find out alternative path
-		else if(mvcList[i] == BLACK){
+		else if(gvcList[i] == BLACK){
 			srcID = allFlow[flowID].ingressID;
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
-			// It's impossible to find out a path using wireless links with traffic*2 > LINK_CAPACITY
-
 			// Try to find out an alternative path
-			if(traffic * 2 <= LINK_CAPACITY &&
-				alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2)){
+			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2)){
 
 				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
@@ -1180,6 +1239,11 @@ void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
 // Comparison function for sorting hops
 bool Compete::cmpHop(Link A, Link B){
 	return A.sourceID < B.sourceID;
+}
+
+// Comparison function for sorting greedy-vertex-cover
+bool Compete::cmpGVC(GVCNode A, GVCNode B){
+	return A.degree > B.degree;
 }
 
 // Destructure
