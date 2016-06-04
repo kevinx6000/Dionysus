@@ -19,6 +19,9 @@ void Compete::initialize(const vector<Link>& initLinks, const vector<TrancNode>&
 	CompRes ctmp;
 	map<int, int>mtmp;
 
+	// Record pod
+	numOfPod = k;
+
 	// Total number of switches (given k)
 	totalNode = 5*k*k/4;
 
@@ -614,7 +617,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
 			// Try to find out an alternative path
-			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2)){
+			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true)){
 
 				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
@@ -698,10 +701,11 @@ void Compete::occupyRes(const vector<Link>& hopList, double traffic, vector<Comp
 
 // Alternative path searching
 bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>& stage1, const vector<CompRes>& stage2,
-		int srcID, int dstID, double traffic, const FlowPath& orgPlan, vector<Link>& newPath, ResDiff& diff1, ResDiff& diff2){
+		int srcID, int dstID, double traffic, const FlowPath& orgPlan, vector<Link>& newPath, ResDiff& diff1, ResDiff& diff2, bool isWireless){
 
 	// Variable
 	int nowID, nxtID, linkID, tmpID;
+	int aggrID, coreID;
 	bool done, interOK;
 	Link ltmp;
 	ResDiffNode rtmp;
@@ -716,275 +720,283 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 	map<int, int>interCnt2;
 	map<int, int>::iterator mapItr;
 
-	// Initialize all links as not used
-	mtmp.clear();
-	for(int i = 0; i < (int)linkMap.size(); i++){
-		used1.push_back(mtmp);
-		used2.push_back(mtmp);
-	}
+	// Wireless path
+	if(isWireless){
 
-	// Clear resource difference
-	diff1.link.clear();
-	diff1.tranc.clear();
-	diff1.inter.clear();
-	diff2.link.clear();
-	diff2.tranc.clear();
-	diff2.inter.clear();
+		// Initialize all links as not used
+		mtmp.clear();
+		for(int i = 0; i < (int)linkMap.size(); i++){
+			used1.push_back(mtmp);
+			used2.push_back(mtmp);
+		}
 
-	// Record interference count for original plan
-	interCnt1.clear();
-	interCnt2.clear();
-	for(int state = 0; state < 2; state++){
-		for(int i = 0; i < (int)orgPlan.link[state].size(); i++){
-			nowID = orgPlan.link[state][i].sourceID;
-			nxtID = orgPlan.link[state][i].destinationID;
-			linkID = linkMap[nowID][nxtID];
+		// Clear resource difference
+		diff1.link.clear();
+		diff1.tranc.clear();
+		diff1.inter.clear();
+		diff2.link.clear();
+		diff2.tranc.clear();
+		diff2.inter.clear();
 
-			// Stage1
-			if(state == 1){
-				used1[nowID][nxtID] = true;
-				for(int j = 0; j < (int)stage1[linkID].iList.size(); j++)
-					interCnt1[ stage1[ stage1[linkID].iList[j] ].srcID ]++;
-			}
+		// Record interference count for original plan
+		interCnt1.clear();
+		interCnt2.clear();
+		for(int state = 0; state < 2; state++){
+			for(int i = 0; i < (int)orgPlan.link[state].size(); i++){
+				nowID = orgPlan.link[state][i].sourceID;
+				nxtID = orgPlan.link[state][i].destinationID;
+				linkID = linkMap[nowID][nxtID];
 
-			// State2
-			else{
-				used2[nowID][nxtID] = true;
-				for(int j = 0; j < (int)stage2[linkID].iList.size(); j++)
-					interCnt2[ stage2[ stage2[linkID].iList[j] ].srcID ]++;
+				// Stage1
+				if(state == 1){
+					used1[nowID][nxtID] = true;
+					for(int j = 0; j < (int)stage1[linkID].iList.size(); j++)
+						interCnt1[ stage1[ stage1[linkID].iList[j] ].srcID ]++;
+				}
+
+				// State2
+				else{
+					used2[nowID][nxtID] = true;
+					for(int j = 0; j < (int)stage2[linkID].iList.size(); j++)
+						interCnt2[ stage2[ stage2[linkID].iList[j] ].srcID ]++;
+				}
 			}
 		}
-	}
 
-	// Clear BFS node records
-	bfsNow.stage1.interCnt.clear();
-	bfsNow.stage1.linkCap.clear();
-	bfsNow.stage1.trancCap.clear();
-	bfsNow.stage1.interCap.clear();
-	bfsNow.stage2.interCnt.clear();
-	bfsNow.stage2.linkCap.clear();
-	bfsNow.stage2.trancCap.clear();
-	bfsNow.stage2.interCap.clear();
+		// Clear BFS node records
+		bfsNow.stage1.interCnt.clear();
+		bfsNow.stage1.linkCap.clear();
+		bfsNow.stage1.trancCap.clear();
+		bfsNow.stage1.interCap.clear();
+		bfsNow.stage2.interCnt.clear();
+		bfsNow.stage2.linkCap.clear();
+		bfsNow.stage2.trancCap.clear();
+		bfsNow.stage2.interCap.clear();
 
-	// Copy resource usage for stage1
-	for(int i = 0; i < (int)stage1.size(); i++){
-		if(stage1[i].resType == LINK_RES)
-			bfsNow.stage1.linkCap[i] = stage1[i].resCap;
-		if(stage1[i].resType == TRANC_RES)
-			bfsNow.stage1.trancCap[ stage1[i].srcID ] = stage1[i].resCap;
-		if(stage1[i].resType == INTER_RES)
-			bfsNow.stage1.interCap[ stage1[i].srcID ] = stage1[i].resCap;
-	}
+		// Copy resource usage for stage1
+		for(int i = 0; i < (int)stage1.size(); i++){
+			if(stage1[i].resType == LINK_RES)
+				bfsNow.stage1.linkCap[i] = stage1[i].resCap;
+			if(stage1[i].resType == TRANC_RES)
+				bfsNow.stage1.trancCap[ stage1[i].srcID ] = stage1[i].resCap;
+			if(stage1[i].resType == INTER_RES)
+				bfsNow.stage1.interCap[ stage1[i].srcID ] = stage1[i].resCap;
+		}
 
-	// Copy resource usage for stage2
-	for(int i = 0; i < (int)stage2.size(); i++){
-		if(stage2[i].resType == LINK_RES)
-			bfsNow.stage2.linkCap[i] = stage2[i].resCap;
-		if(stage2[i].resType == TRANC_RES)
-			bfsNow.stage2.trancCap[ stage2[i].srcID ] = stage2[i].resCap;
-		if(stage2[i].resType == INTER_RES)
-			bfsNow.stage2.interCap[ stage2[i].srcID ] = stage2[i].resCap;
-	}
+		// Copy resource usage for stage2
+		for(int i = 0; i < (int)stage2.size(); i++){
+			if(stage2[i].resType == LINK_RES)
+				bfsNow.stage2.linkCap[i] = stage2[i].resCap;
+			if(stage2[i].resType == TRANC_RES)
+				bfsNow.stage2.trancCap[ stage2[i].srcID ] = stage2[i].resCap;
+			if(stage2[i].resType == INTER_RES)
+				bfsNow.stage2.interCap[ stage2[i].srcID ] = stage2[i].resCap;
+		}
 
 fprintf(stderr, "<-------------- BFS start ------------->\n");
 clock_t begTime = clock();
-	// BFS
-	done = false;
-	bfsNow.switchID = srcID;
-	que.push(bfsNow);
-	vis[srcID] = true;
-	prev[srcID] = srcID;
-	while(!que.empty() && !done){
-		bfsNow = que.front();
-		nowID = bfsNow.switchID;
-		que.pop();
+		// BFS
+		done = false;
+		bfsNow.switchID = srcID;
+		que.push(bfsNow);
+		vis[srcID] = true;
+		prev[srcID] = srcID;
+		while(!que.empty() && !done){
+			bfsNow = que.front();
+			nowID = bfsNow.switchID;
+			que.pop();
 
-		// Search neighbor
-int cntNei = 0;
-		for(int i = 0; i < (int)edg[nowID].size(); i++){
-			nxtID = edg[nowID][i];
-			if(!vis[nxtID]){
-				bfsNxt = bfsNow;
-				bfsNxt.switchID = nxtID;
-cntNei ++;
+			// Search neighbor
+			int cntNei = 0;
+			for(int i = 0; i < (int)edg[nowID].size(); i++){
+				nxtID = edg[nowID][i];
+				if(!vis[nxtID]){
+					bfsNxt = bfsNow;
+					bfsNxt.switchID = nxtID;
+					cntNei ++;
 
-				// Stage1: not in original plan -> new requiring resource
-				if(!used1[nowID][nxtID]){
+					// Stage1: not in original plan -> new requiring resource
+					if(!used1[nowID][nxtID]){
 
-					// Link capacity
-					if(bfsNxt.stage1.linkCap[ linkMap[nowID][nxtID] ] < traffic) continue;
-					bfsNxt.stage1.linkCap[ linkMap[nowID][nxtID] ] -= traffic;
+						// Link capacity
+						if(bfsNxt.stage1.linkCap[ linkMap[nowID][nxtID] ] < traffic) continue;
+						bfsNxt.stage1.linkCap[ linkMap[nowID][nxtID] ] -= traffic;
 
-					// Wireless: further check for transceiver/interference
-					if(stage1[ linkMap[nowID][nxtID] ].isWireless){
+						// Wireless: further check for transceiver/interference
+						if(stage1[ linkMap[nowID][nxtID] ].isWireless){
 
-						// Transceiver
-						if(bfsNxt.stage1.trancCap[nowID] < traffic) continue;
-						bfsNxt.stage1.trancCap[nowID] -= traffic;
-						if(bfsNxt.stage1.trancCap[nxtID] < traffic) continue;
-						bfsNxt.stage1.trancCap[nxtID] -= traffic;
+							// Transceiver
+							if(bfsNxt.stage1.trancCap[nowID] < traffic) continue;
+							bfsNxt.stage1.trancCap[nowID] -= traffic;
+							if(bfsNxt.stage1.trancCap[nxtID] < traffic) continue;
+							bfsNxt.stage1.trancCap[nxtID] -= traffic;
 
-						// Interference
-						interOK = true;
-						linkID = linkMap[nowID][nxtID];
-						for(int j = 0; j < (int)stage1[linkID].iList.size(); j++){
+							// Interference
+							interOK = true;
+							linkID = linkMap[nowID][nxtID];
+							for(int j = 0; j < (int)stage1[linkID].iList.size(); j++){
 
-							// Current interference count
-							tmpID = stage1[ stage1[linkID].iList[j] ].srcID;
-							bfsNxt.stage1.interCnt[tmpID]++;
+								// Current interference count
+								tmpID = stage1[ stage1[linkID].iList[j] ].srcID;
+								bfsNxt.stage1.interCnt[tmpID]++;
 
-							// Not exceed existing interference count: no need to used
-							if(bfsNxt.stage1.interCnt[tmpID] <= interCnt1[tmpID]) continue;
+								// Not exceed existing interference count: no need to used
+								if(bfsNxt.stage1.interCnt[tmpID] <= interCnt1[tmpID]) continue;
 
-							// Not enough capacity
-							if(bfsNxt.stage1.interCap[tmpID] < traffic){
-								interOK = false;
-								break;
+								// Not enough capacity
+								if(bfsNxt.stage1.interCap[tmpID] < traffic){
+									interOK = false;
+									break;
+								}
+								bfsNxt.stage1.interCap[tmpID] -= traffic;
 							}
-							bfsNxt.stage1.interCap[tmpID] -= traffic;
+							if(!interOK) continue;
 						}
-						if(!interOK) continue;
 					}
-				}
 
-				// Stage2: not in original plan -> new requiring resource
-				if(!used2[nowID][nxtID]){
+					// Stage2: not in original plan -> new requiring resource
+					if(!used2[nowID][nxtID]){
 
-					// Link capacity
-					if(bfsNxt.stage2.linkCap[ linkMap[nowID][nxtID] ] < traffic) continue;
-					bfsNxt.stage2.linkCap[ linkMap[nowID][nxtID] ] -= traffic;
+						// Link capacity
+						if(bfsNxt.stage2.linkCap[ linkMap[nowID][nxtID] ] < traffic) continue;
+						bfsNxt.stage2.linkCap[ linkMap[nowID][nxtID] ] -= traffic;
 
-					// Wireless: further check for transceiver/interference
-					if(stage2[ linkMap[nowID][nxtID] ].isWireless){
+						// Wireless: further check for transceiver/interference
+						if(stage2[ linkMap[nowID][nxtID] ].isWireless){
 
-						// Transceiver
-						if(bfsNxt.stage2.trancCap[nowID] < traffic) continue;
-						bfsNxt.stage2.trancCap[nowID] -= traffic;
-						if(bfsNxt.stage2.trancCap[nxtID] < traffic) continue;
-						bfsNxt.stage2.trancCap[nxtID] -= traffic;
+							// Transceiver
+							if(bfsNxt.stage2.trancCap[nowID] < traffic) continue;
+							bfsNxt.stage2.trancCap[nowID] -= traffic;
+							if(bfsNxt.stage2.trancCap[nxtID] < traffic) continue;
+							bfsNxt.stage2.trancCap[nxtID] -= traffic;
 
-						// Interference
-						interOK = true;
-						linkID = linkMap[nowID][nxtID];
-						for(int j = 0; j < (int)stage2[linkID].iList.size(); j++){
+							// Interference
+							interOK = true;
+							linkID = linkMap[nowID][nxtID];
+							for(int j = 0; j < (int)stage2[linkID].iList.size(); j++){
 
-							// Current interference count
-							tmpID = stage2[ stage2[linkID].iList[j] ].srcID;
-							bfsNxt.stage2.interCnt[tmpID]++;
+								// Current interference count
+								tmpID = stage2[ stage2[linkID].iList[j] ].srcID;
+								bfsNxt.stage2.interCnt[tmpID]++;
 
-							// Not exceed existing interference count: no need to used
-							if(bfsNxt.stage2.interCnt[tmpID] <= interCnt2[tmpID]) continue;
+								// Not exceed existing interference count: no need to used
+								if(bfsNxt.stage2.interCnt[tmpID] <= interCnt2[tmpID]) continue;
 
-							// Not enough capacity
-							if(bfsNxt.stage2.interCap[tmpID] < traffic){
-								interOK = false;
-								break;
+								// Not enough capacity
+								if(bfsNxt.stage2.interCap[tmpID] < traffic){
+									interOK = false;
+									break;
+								}
+								bfsNxt.stage2.interCap[tmpID] -= traffic;
 							}
-							bfsNxt.stage2.interCap[tmpID] -= traffic;
+							if(!interOK) continue;
 						}
-						if(!interOK) continue;
 					}
-				}
 
-				// Feasible
-				que.push(bfsNxt);
-				vis[nxtID] = true;
-				prev[nxtID] = nowID;
+					// Feasible
+					que.push(bfsNxt);
+					vis[nxtID] = true;
+					prev[nxtID] = nowID;
 
-				// Reach destination
-				if(nxtID == dstID){
-					done = true;
-					bfsFinal = bfsNxt;
-					break;
+					// Reach destination
+					if(nxtID == dstID){
+						done = true;
+						bfsFinal = bfsNxt;
+						break;
+					}
 				}
 			}
+			fprintf(stderr, "[Info] # of neighbor checks = %d\n", cntNei);
 		}
-fprintf(stderr, "[Info] # of neighbor checks = %d\n", cntNei);
-	}
 clock_t endTime = clock();
 fprintf(stderr, "[Info] time = %.2lf msec\n", (endTime - begTime) / 1000.0);
 fprintf(stderr, "<-------------- BFS End ------------->\n");
 
-	// Path found
-	if(done){
+		// Path found
+		if(done){
 
-		// DEBUG: print out path
-		nowID = dstID;
-		while(nowID != srcID){
-			fprintf(stderr, "%d <-- ", nowID);
-			nowID = prev[nowID];
-		}
-		fprintf(stderr, "%d\n", srcID);
+			// DEBUG: print out path
+			nowID = dstID;
+			while(nowID != srcID){
+				fprintf(stderr, "%d <-- ", nowID);
+				nowID = prev[nowID];
+			}
+			fprintf(stderr, "%d\n", srcID);
 
-		// Retrieve new path
-		newPath.clear();
-		nowID = dstID;
-		while(nowID != srcID){
-			ltmp.sourceID = prev[nowID];
-			ltmp.destinationID = nowID;
-			newPath.push_back(ltmp);
-			nowID = prev[nowID];
+			// Retrieve new path
+			newPath.clear();
+			nowID = dstID;
+			while(nowID != srcID){
+				ltmp.sourceID = prev[nowID];
+				ltmp.destinationID = nowID;
+				newPath.push_back(ltmp);
+				nowID = prev[nowID];
+			}
+
+			// Record traffic difference for stage1
+			rtmp.relTraffic = 0;
+			for(int i = 0; i < (int)stage1.size(); i++){
+				if(stage1[i].resType == LINK_RES){
+					if(bfsFinal.stage1.linkCap[i] < stage1[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.linkCap[i];
+						diff1.link.push_back(rtmp);
+					}
+				}
+				if(stage1[i].resType == TRANC_RES){
+					if(bfsFinal.stage1.trancCap[ stage1[i].srcID ] < stage1[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.trancCap[stage1[i].srcID];
+						diff1.tranc.push_back(rtmp);
+					}
+				}
+				if(stage1[i].resType == INTER_RES){
+					if(bfsFinal.stage1.interCap[ stage1[i].srcID ] < stage1[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.interCap[stage1[i].srcID];
+						diff1.inter.push_back(rtmp);
+					}
+				}
+			}
+
+			// Record traffic difference for stage1
+			rtmp.relTraffic = 0;
+			for(int i = 0; i < (int)stage2.size(); i++){
+				if(stage2[i].resType == LINK_RES){
+					if(bfsFinal.stage2.linkCap[i] < stage2[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.linkCap[i];
+						diff2.link.push_back(rtmp);
+					}
+				}
+				if(stage2[i].resType == TRANC_RES){
+					if(bfsFinal.stage2.trancCap[ stage2[i].srcID ] < stage2[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.trancCap[stage2[i].srcID];
+						diff2.tranc.push_back(rtmp);
+					}
+				}
+				if(stage2[i].resType == INTER_RES){
+					if(bfsFinal.stage2.interCap[ stage2[i].srcID ] < stage2[i].resCap){
+						rtmp.ID = i;
+						rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.interCap[stage2[i].srcID];
+						diff2.inter.push_back(rtmp);
+					}
+				}
+			}
 		}
 
-		// Record traffic difference for stage1
-		rtmp.relTraffic = 0;
-		for(int i = 0; i < (int)stage1.size(); i++){
-			if(stage1[i].resType == LINK_RES){
-				if(bfsFinal.stage1.linkCap[i] < stage1[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.linkCap[i];
-					diff1.link.push_back(rtmp);
-				}
-			}
-			if(stage1[i].resType == TRANC_RES){
-				if(bfsFinal.stage1.trancCap[ stage1[i].srcID ] < stage1[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.trancCap[stage1[i].srcID];
-					diff1.tranc.push_back(rtmp);
-				}
-			}
-			if(stage1[i].resType == INTER_RES){
-				if(bfsFinal.stage1.interCap[ stage1[i].srcID ] < stage1[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage1[i].resCap - bfsFinal.stage1.interCap[stage1[i].srcID];
-					diff1.inter.push_back(rtmp);
-				}
-			}
-		}
-
-		// Record traffic difference for stage1
-		rtmp.relTraffic = 0;
-		for(int i = 0; i < (int)stage2.size(); i++){
-			if(stage2[i].resType == LINK_RES){
-				if(bfsFinal.stage2.linkCap[i] < stage2[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.linkCap[i];
-					diff2.link.push_back(rtmp);
-				}
-			}
-			if(stage2[i].resType == TRANC_RES){
-				if(bfsFinal.stage2.trancCap[ stage2[i].srcID ] < stage2[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.trancCap[stage2[i].srcID];
-					diff2.tranc.push_back(rtmp);
-				}
-			}
-			if(stage2[i].resType == INTER_RES){
-				if(bfsFinal.stage2.interCap[ stage2[i].srcID ] < stage2[i].resCap){
-					rtmp.ID = i;
-					rtmp.reqTraffic = stage2[i].resCap - bfsFinal.stage2.interCap[stage2[i].srcID];
-					diff2.inter.push_back(rtmp);
-				}
-			}
-		}
+		// Clear (not necessary)
+		vis.clear();
+		prev.clear();
+		used1.clear();
+		used2.clear();
+		while(!que.empty()) que.pop();
 	}
 
-	// Clear (not necessary)
-	vis.clear();
-	prev.clear();
-	used1.clear();
-	used2.clear();
-	while(!que.empty()) que.pop();
+	// Wired path
+	else{
+	}
 
 	// Return true if found
 	return done;
@@ -1246,6 +1258,26 @@ bool Compete::cmpHop(Link A, Link B){
 // Comparison function for sorting greedy-vertex-cover
 bool Compete::cmpGVC(GVCNode A, GVCNode B){
 	return A.degree > B.degree;
+}
+
+// Generate random list (not repeated)
+void Compete::genRandList(vector<int>& randList, int size){
+
+	// Variable
+	int tmp, pos;
+
+	// First put 0 ~ size-1 into list
+	randList.clear();
+	for(int i = 0; i < size; i++)
+		randList.push_back(i);
+
+	// Randomly swap each element
+	for(int i = 0; i < size-1; i++){
+		pos = i + rand()%(size-i);
+		tmp = randList[pos];
+		randList[pos] = randList[i];
+		randList[i] = tmp;
+	}
 }
 
 // Destructure

@@ -97,6 +97,7 @@ class Compete{
 		};
 		
 	private:
+		int numOfPod;					// Record number of pod
 		bool isInitLink;				// Record if link resource is initialized
 		bool isInitTranc;				// Record if transceiver resource is initialized
 		bool isInitInter;				// Record if interference resource is initialized
@@ -125,9 +126,10 @@ class Compete{
 		void occupyRes(const vector<Flow>&, int, int, int, double);
 		void occupyRes(const vector<Link>&, double, vector<CompRes>&);
 		void resDiffCheck(int, FlowPath&, ResDiff&);
-		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&);
+		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&, bool);
 		static bool cmpHop(Link, Link);
 		static bool cmpGVC(GVCNode, GVCNode);
+		void genRandList(vector<int>&, int);
 };
 
 #endif
