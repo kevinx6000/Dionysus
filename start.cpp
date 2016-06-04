@@ -32,6 +32,7 @@ void Dionysus::start(void){
 		}
 		
 		// DEBUG
+		/*
 		for(int state = 0; state < 2; state++){
 			fprintf(stderr, "[Trans%d]:\n", state+1);
 			for(int flowID = 0; flowID < (int)newFlow[state].size(); flowID++){
@@ -47,6 +48,7 @@ void Dionysus::start(void){
 				}
 			}
 		}
+		*/
 	}
 	else{
 		numOfPlan = 1;

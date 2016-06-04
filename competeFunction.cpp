@@ -380,7 +380,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	}
 
 	// DEBUG: compete graph
-	/**/
+	/*
 	for(int nodeID = 0; nodeID < (int)compNode.size(); nodeID++){
 		if(compNode[nodeID].edge.size() > 0){
 			fprintf(stderr, "%d/%d:\n", compNode[nodeID].flowID, compNode[nodeID].pathID);
@@ -404,7 +404,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 			fprintf(stderr, "\n");
 		}
 	}
-	/**/
+	*/
 }
 
 // Check if temporary resource is needed
@@ -1225,6 +1225,7 @@ void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
 	}
 
 	// DEBUG
+	/*
 	fprintf(stderr, "[Info] Resource Diff (link)\n");
 	for(int i = 0; i < (int)resDiff.link.size(); i++)
 		fprintf(stderr, "[Info]\t%d-%d: req=%.2lf, rel=%.2lf\n", compRes[resDiff.link[i].ID].srcID, compRes[resDiff.link[i].ID].dstID, resDiff.link[i].reqTraffic, resDiff.link[i].relTraffic);
@@ -1234,6 +1235,7 @@ void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
 	fprintf(stderr, "[Info] Resource Diff (inter)\n");
 	for(int i = 0; i < (int)resDiff.inter.size(); i++)
 		fprintf(stderr, "[Info]\t%d: req=%.2lf, rel=%.2lf\n", compRes[resDiff.inter[i].ID].srcID, resDiff.inter[i].reqTraffic, resDiff.inter[i].relTraffic);
+	*/
 }
 
 // Comparison function for sorting hops
