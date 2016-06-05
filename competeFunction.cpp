@@ -1076,8 +1076,8 @@ fprintf(stderr, "<-------------- BFS End ------------->\n");
 				done = true;
 			}
 			
-			// Not found, retry next path
-			if(!done) continue;
+			// Found, stop trying
+			if(done) break;
 		}
 
 		// Path found

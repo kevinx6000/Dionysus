@@ -52,7 +52,6 @@ bool Dionysus::calculateCPL(void){
 	}
 
 	// Cycle exists: random CPL assigned
-	srand((unsigned)time(NULL));
 	for(int i = 0; i < (int)nodes.size(); i++)
 		nodes[i].CPL = rand()%nodes.size();
 
