@@ -7,7 +7,8 @@
 void Dionysus::schedule(int owDpID){
 
 	// Variable
-	int oaID, owID, odID, fTag;
+//	int fTag;
+	int oaID, owID, odID;
 	int oaDpID, odDpID;
 	double totTraffic;
 
@@ -15,7 +16,7 @@ void Dionysus::schedule(int owDpID){
 	if(operations[ nodes[owDpID].nodeIndex ].ruleSet.size() > 0){
 
 		// Flow Tag
-		fTag = operations[ nodes[owDpID].nodeIndex ].flowTag;
+//		fTag = operations[ nodes[owDpID].nodeIndex ].flowTag;
 //		fprintf(stderr, "Flow %d:\n", fTag);
 
 		// Add rules

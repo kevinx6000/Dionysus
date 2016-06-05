@@ -617,7 +617,8 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
 			// Try to find out an alternative path
-			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true)){
+//			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true)){
+			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false)){
 
 				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
@@ -720,6 +721,21 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 	map<int, int>interCnt2;
 	map<int, int>::iterator mapItr;
 
+	int aggrID2, pod1, pod2;
+	int numOfCore, numOfAggr;
+	vector<int>randAggr;
+	vector<int>randCore;
+	map<int, int>usedLink1;
+	map<int, int>usedLink2;
+
+	// Clear resource difference
+	diff1.link.clear();
+	diff1.tranc.clear();
+	diff1.inter.clear();
+	diff2.link.clear();
+	diff2.tranc.clear();
+	diff2.inter.clear();
+
 	// Wireless path
 	if(isWireless){
 
@@ -729,14 +745,6 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 			used1.push_back(mtmp);
 			used2.push_back(mtmp);
 		}
-
-		// Clear resource difference
-		diff1.link.clear();
-		diff1.tranc.clear();
-		diff1.inter.clear();
-		diff2.link.clear();
-		diff2.tranc.clear();
-		diff2.inter.clear();
 
 		// Record interference count for original plan
 		interCnt1.clear();
@@ -996,6 +1004,118 @@ fprintf(stderr, "<-------------- BFS End ------------->\n");
 
 	// Wired path
 	else{
+
+		// Record used links resource
+		usedLink1.clear();
+		usedLink2.clear();
+		for(int state = 0; state < 2; state++){
+			for(int i = 0; i < (int)orgPlan.link[state].size(); i++){
+				nowID = orgPlan.link[state][i].sourceID;
+				nxtID = orgPlan.link[state][i].destinationID;
+				linkID = linkMap[nowID][nxtID];
+
+				// Stage1
+				if(state == 1)
+					usedLink1[linkID] = true;
+
+				// State2
+				else
+					usedLink2[linkID] = true;
+			}
+		}
+
+		// DFS initialize
+		done = false;
+		numOfCore = (numOfPod/2) * (numOfPod/2);
+		numOfAggr = (numOfPod/2) * numOfPod;
+		pod1 = (srcID - numOfCore - numOfAggr) / (numOfPod/2);
+		pod2 = (dstID - numOfCore - numOfAggr) / (numOfPod/2);
+		prev.clear();
+
+		// Edge -> Aggr
+		genRandList(randAggr, numOfPod/2);
+		for(int i = 0; i < numOfPod/2; i++){
+			aggrID = numOfCore + pod1 * (numOfPod/2) + randAggr[i];
+			linkID = linkMap[srcID][aggrID];
+			if(!usedLink1[linkID] && stage1[linkID].resCap < traffic) continue;
+			if(!usedLink2[linkID] && stage2[linkID].resCap < traffic) continue;
+			prev[aggrID] = srcID;
+
+			// Aggr -> Core
+			if(pod1 != pod2){
+				genRandList(randCore, numOfPod/2);
+				for(int j = 0; j < numOfPod/2; j++){
+					coreID = ((aggrID - numOfCore) % (numOfPod/2)) * (numOfPod/2) + randCore[j];
+					linkID = linkMap[aggrID][coreID];
+					if(!usedLink1[linkID] && stage1[linkID].resCap < traffic) continue;
+					if(!usedLink2[linkID] && stage2[linkID].resCap < traffic) continue;
+					prev[coreID] = aggrID;
+
+					// Core -> Aggr
+					aggrID2 = numOfCore + pod2 * (numOfPod/2) + coreID / (numOfPod/2);
+					linkID = linkMap[coreID][aggrID2];
+					if(!usedLink1[linkID] && stage1[linkID].resCap < traffic) continue;
+					if(!usedLink2[linkID] && stage2[linkID].resCap < traffic) continue;
+					prev[aggrID2] = coreID;
+
+					// Aggr -> Edge
+					linkID = linkMap[aggrID2][dstID];
+					if(!usedLink1[linkID] && stage1[linkID].resCap < traffic) continue;
+					if(!usedLink2[linkID] && stage2[linkID].resCap < traffic) continue;
+					prev[dstID] = aggrID2;
+					done = true;
+				}
+			}
+
+			// Aggr -> Edge
+			else{
+				linkID = linkMap[aggrID][dstID];
+				if(!usedLink1[linkID] && stage1[linkID].resCap < traffic) continue;
+				if(!usedLink2[linkID] && stage2[linkID].resCap < traffic) continue;
+				prev[dstID] = aggrID;
+				done = true;
+			}
+			
+			// Not found, retry next path
+			if(!done) continue;
+		}
+
+		// Path found
+		if(done){
+
+			// DEBUG: print out path
+			nowID = dstID;
+			while(nowID != srcID){
+				fprintf(stderr, "%d <-- ", nowID);
+				nowID = prev[nowID];
+			}
+			fprintf(stderr, "%d\n", srcID);
+
+			// Retrieve & record new path
+			newPath.clear();
+			nowID = dstID;
+			rtmp.relTraffic = 0;
+			while(nowID != srcID){
+				ltmp.sourceID = prev[nowID];
+				ltmp.destinationID = nowID;
+				newPath.push_back(ltmp);
+
+				// Record traffic difference
+				linkID = linkMap[ prev[nowID] ][ nowID ];
+				if(!usedLink1[linkID]){
+					rtmp.ID = linkID;
+					rtmp.reqTraffic = traffic;
+					diff1.link.push_back(rtmp);
+				}
+				if(!usedLink2[linkID]){
+					rtmp.ID = linkID;
+					rtmp.reqTraffic = traffic;
+					diff2.link.push_back(rtmp);
+				}
+
+				nowID = prev[nowID];
+			}
+		}
 	}
 
 	// Return true if found
