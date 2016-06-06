@@ -116,7 +116,6 @@ class Compete{
 				int degree;
 		};
 		int gvcSize;
-		vector<int>gvcCnt;
 		vector<int>gvcList;
 		vector<GVCNode>gvcNode;
 		

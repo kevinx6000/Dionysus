@@ -414,84 +414,32 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 bool Compete::needTemp(void){
 
 	// Variable
-	int curID, nxtID;
-	bool uncovered, more;
-	map<int, bool>used;
+	int curID;
+	bool more;
 	GVCNode gtmp;
 
 	// Initialize
 	gvcSize = 0;
-	gvcCnt.clear();
 	gvcList.clear();
 	gvcNode.clear();
 	for(int i = 0; i < (int)compNode.size(); i++){
 		gtmp.ID = i;
 		gtmp.degree = compNode[i].edge.size() + compNode[i].prev.size();
 		gvcNode.push_back(gtmp);
-		gvcCnt.push_back(0);
 		gvcList.push_back(NOT_VISITED);
 	}
 
-	// Sort degree decreasingly
+	// Sort degree increasingly
 	sort(gvcNode.begin(), gvcNode.end(), cmpGVC);
 
-	// Greedy: step1 - pick from highest degree
+	// Greedy: step1 - color all nodes as BLACK
 	for(int i = 0; i < (int)gvcNode.size(); i++){
 		curID = gvcNode[i].ID;
-		uncovered = false;
-
-		// Only node with at least one neighbor should color
-		if(gvcNode[i].degree > 0){
-
-			// Self
-			if(gvcCnt[curID] == 0) uncovered = true;
-
-			// Neighbor
-			else{		
-				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-					if(gvcCnt[ compNode[curID].edge[j].dstID ] == 0){
-						uncovered = true;
-						break;
-					}
-				}
-				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-					if(gvcCnt[ compNode[curID].prev[j] ] == 0){
-						uncovered = true;
-						break;
-					}
-				}
-			}
-		}
-
-		// At least one node not covered yet: color self
-		if(uncovered){
-			gvcSize++;
-			gvcCnt[curID]++;
-			used.clear();
-			for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-				nxtID = compNode[curID].edge[j].dstID;
-				if(!used[nxtID]){
-					gvcCnt[nxtID]++;
-					used[nxtID] = true;
-				}
-			}
-			for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-				nxtID = compNode[curID].prev[j];
-				if(!used[nxtID]){
-					gvcCnt[nxtID]++;
-					used[nxtID] = true;
-				}
-			}
-			gvcList[curID] = BLACK;
-		}
-
-		// All neighbors are covered (including self)
-		else gvcList[curID] = WHITE;
+		gvcList[curID] = BLACK;
+		gvcSize++;
 	}
 
-	fprintf(stderr, "Cur = %d\n", gvcSize);
-
-	// Greedy: step2 - remove redundant node
+	// Greedy: step2 - remove redundant node from smallest degree
 	for(int i = 0; i < (int)gvcNode.size(); i++){
 		curID = gvcNode[i].ID;
 
@@ -499,43 +447,24 @@ bool Compete::needTemp(void){
 		if(gvcList[curID] == BLACK){
 			more = true;
 
-			// All neighbors are colered more than once (including self)
-			if(gvcCnt[curID] == 1) more = false;
-			else{
-				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-					if(gvcCnt[ compNode[curID].edge[j].dstID ] == 1){
-						more = false;
-						break;
-					}
+			// All neighbors are colored
+			for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
+				if(gvcList[ compNode[curID].edge[j].dstID ] != BLACK){
+					more = false;
+					break;
 				}
-				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-					if(gvcCnt[ compNode[curID].prev[j] ] == 1){
-						more = false;
-						break;
-					}
+			}
+			for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
+				if(gvcList[ compNode[curID].prev[j] ] != BLACK){
+					more = false;
+					break;
 				}
 			}
 
 			// Can remove
 			if(more){
-				gvcSize--;
-				gvcCnt[curID]--;
-				used.clear();
-				for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-					nxtID = compNode[curID].edge[j].dstID;
-					if(!used[nxtID]){
-						gvcCnt[nxtID]--;
-						used[nxtID] = true;
-					}
-				}
-				for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-					nxtID = compNode[curID].prev[j];
-					if(!used[nxtID]){
-						gvcCnt[nxtID]--;
-						used[nxtID] = true;
-					}
-				}
 				gvcList[curID] = WHITE;
+				gvcSize--;
 			}
 		}
 	}
@@ -1377,7 +1306,7 @@ bool Compete::cmpHop(Link A, Link B){
 
 // Comparison function for sorting greedy-vertex-cover
 bool Compete::cmpGVC(GVCNode A, GVCNode B){
-	return A.degree > B.degree;
+	return A.degree < B.degree;
 }
 
 // Generate random list (not repeated)
