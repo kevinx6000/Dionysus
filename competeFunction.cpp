@@ -458,7 +458,7 @@ bool Compete::needTemp(void){
 			cycleMarkCount++;
 
 	// Return checking result
-	fprintf(stderr, "Cycle mark cnt = %d\n", cycleMarkCount);
+//	fprintf(stderr, "Cycle mark cnt = %d\n", cycleMarkCount);
 	return cycleMarkCount > 0;
 }
 
@@ -469,6 +469,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	int totalCnt;
 	int srcID, dstID;
 	int flowID, pathID;
+	bool alterFound;
 	double traffic;
 	vector<int>etmp;
 	vector< vector<int> >edg;
@@ -533,9 +534,28 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
+			// Random wired/wireless path
+			if(rand()%2){
+
+				// Wired first
+				alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false);
+
+				// Wireless if not found
+				if(!alterFound)
+					alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true);
+			}
+			else{
+
+				// Wireless first
+				alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true);
+
+				// Wired if not found
+				if(!alterFound)
+					alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false);
+			}
+
 			// Try to find out an alternative path
-//			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true)){
-			if(alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false)){
+			if(alterFound){
 
 				// Set new path as  final  state of newFlow1: I -> F'
 				newFlow1[flowID].flowPath[pathID].link[1] = newPath;
@@ -560,7 +580,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 					lastRes[ resDiff2.inter[j].ID ].resCap -= resDiff2.inter[j].reqTraffic;
 
 				// DEBUG message
-				fprintf(stderr, "[Info] Alternative path found\n");
+//				fprintf(stderr, "[Info] Alternative path found\n");
 			}
 
 			// Not found, preserve the original one
@@ -579,7 +599,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 					compRes[ resDiff.inter[j].ID ].resCap -= resDiff.inter[j].reqTraffic;
 
 				// DEBUG message
-				fprintf(stderr, "[Info] Alternative path not found, preserve original path\n");
+//				fprintf(stderr, "[Info] Alternative path not found, preserve original path\n");
 			}
 		}
 
@@ -718,7 +738,7 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 				bfsNow.stage2.interCap[ stage2[i].srcID ] = stage2[i].resCap;
 		}
 
-fprintf(stderr, "<-------------- BFS start ------------->\n");
+//fprintf(stderr, "<-------------- BFS start ------------->\n");
 clock_t begTime = clock();
 		// BFS
 		done = false;
@@ -831,22 +851,22 @@ clock_t begTime = clock();
 					}
 				}
 			}
-			fprintf(stderr, "[Info] # of neighbor checks = %d\n", cntNei);
+//			fprintf(stderr, "[Info] # of neighbor checks = %d\n", cntNei);
 		}
 clock_t endTime = clock();
-fprintf(stderr, "[Info] time = %.2lf msec\n", (endTime - begTime) / 1000.0);
-fprintf(stderr, "<-------------- BFS End ------------->\n");
+//fprintf(stderr, "[Info] time = %.2lf msec\n", (endTime - begTime) / 1000.0);
+//fprintf(stderr, "<-------------- BFS End ------------->\n");
 
 		// Path found
 		if(done){
 
 			// DEBUG: print out path
-			nowID = dstID;
-			while(nowID != srcID){
-				fprintf(stderr, "%d <-- ", nowID);
-				nowID = prev[nowID];
-			}
-			fprintf(stderr, "%d\n", srcID);
+//			nowID = dstID;
+//			while(nowID != srcID){
+//				fprintf(stderr, "%d <-- ", nowID);
+//				nowID = prev[nowID];
+//			}
+//			fprintf(stderr, "%d\n", srcID);
 
 			// Retrieve new path
 			newPath.clear();
@@ -1001,12 +1021,12 @@ fprintf(stderr, "<-------------- BFS End ------------->\n");
 		if(done){
 
 			// DEBUG: print out path
-			nowID = dstID;
-			while(nowID != srcID){
-				fprintf(stderr, "%d <-- ", nowID);
-				nowID = prev[nowID];
-			}
-			fprintf(stderr, "%d\n", srcID);
+//			nowID = dstID;
+//			while(nowID != srcID){
+//				fprintf(stderr, "%d <-- ", nowID);
+//				nowID = prev[nowID];
+//			}
+//			fprintf(stderr, "%d\n", srcID);
 
 			// Retrieve & record new path
 			newPath.clear();

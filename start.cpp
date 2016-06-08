@@ -78,8 +78,9 @@ void Dionysus::start(void){
 			updateGraph();
 
 			// Cycle exits when calculating CPL
-			if(!calculateCPL())
-				fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
+			calculateCPL();
+//			if(!calculateCPL())
+//				fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
 
 			// Sort with their CPL
 			sortCPL();
@@ -117,7 +118,7 @@ void Dionysus::start(void){
 
 				// Finished
 				else{
-					fprintf(stderr, "All operation finished.\n");
+//					fprintf(stderr, "All operation finished.\n");
 					break;
 				}
 			}
