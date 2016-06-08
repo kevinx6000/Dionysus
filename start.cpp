@@ -16,6 +16,7 @@ void Dionysus::start(void){
 	addRuleCnt = 0;
 	modRuleCnt = 0;
 	delRuleCnt = 0;
+	roundCnt = 0;
 
 	// Random seed
 	srand((unsigned)clock());
@@ -69,6 +70,9 @@ void Dionysus::start(void){
 
 		// Run until all update is finished
 		while(true){
+
+			// Round count
+			roundCnt ++;
 
 			// Update dependency graph
 			updateGraph();

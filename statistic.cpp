@@ -9,4 +9,5 @@ void Dionysus::statistic(void){
 	fprintf(stderr, "Add rules = %d\n", addRuleCnt);
 	fprintf(stderr, "Mod rules = %d\n", modRuleCnt);
 	fprintf(stderr, "Del rules = %d\n", delRuleCnt);
+	fprintf(stderr, "Round = %d\n", roundCnt);
 }
