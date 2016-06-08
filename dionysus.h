@@ -27,6 +27,7 @@ class Dionysus{
 		int addRuleCnt;							// Total number of add rule
 		int modRuleCnt;							// Total number of modify rule
 		int delRuleCnt;							// Total number of delete rule
+		int roundCnt;							// Total number of round
 		void requireCap(int, int, int, double);	// Require link capacity (add dependency)
 		void releaseCap(int, int, int, double);	// Release link capacity (add dependency)
 		void updateGraph(void);					// Update current dependency graph

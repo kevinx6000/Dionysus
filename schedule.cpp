@@ -7,7 +7,8 @@
 void Dionysus::schedule(int owDpID){
 
 	// Variable
-	int oaID, owID, odID, fID;
+	int oaID, owID, odID;
+//	int fID;
 	int oaDpID, odDpID;
 	double totTraffic;
 
@@ -15,32 +16,32 @@ void Dionysus::schedule(int owDpID){
 	if(operations[ nodes[owDpID].nodeIndex ].ruleSet.size() > 0){
 
 		// Flow ID
-		fID = operations[ nodes[owDpID].nodeIndex ].flowID;
-		fprintf(stderr, "Flow %d:\n", fID);
+//		fID = operations[ nodes[owDpID].nodeIndex ].flowID;
+//		fprintf(stderr, "Flow %d:\n", fID);
 
 		// Add rules
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];
 		oaID = nodes[oaDpID].nodeIndex;
 		for(int i = 0; i < (int)operations[oaID].ruleSet.size(); i++){
-			fprintf(stderr, "Add rules @ switch %d:", operations[oaID].ruleSet[i].switchID);
+//			fprintf(stderr, "Add rules @ switch %d:", operations[oaID].ruleSet[i].switchID);
 			totTraffic = 0.0;
 			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
 				totTraffic += operations[oaID].ruleSet[i].traffic[j];
-			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
-				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]/totTraffic);
-			fprintf(stderr, "\n");
+//			for(int j = 0; j < (int)operations[oaID].ruleSet[i].traffic.size(); j++)
+//				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]/totTraffic);
+//			fprintf(stderr, "\n");
 			addRuleCnt++;
 		}
 
 		// Modify rules
 		owID = nodes[owDpID].nodeIndex;
-		fprintf(stderr, "Modify rule @ ingress switch %d:", operations[owID].ruleSet[0].switchID);
+//		fprintf(stderr, "Modify rule @ ingress switch %d:", operations[owID].ruleSet[0].switchID);
 		totTraffic = 0.0;
 		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
 			totTraffic += operations[owID].ruleSet[0].traffic[i];
-		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
-			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]/totTraffic);
-		fprintf(stderr, "\n");
+//		for(int i = 0; i < (int)operations[owID].ruleSet[0].traffic.size(); i++)
+//			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]/totTraffic);
+//		fprintf(stderr, "\n");
 		modRuleCnt++;
 
 		// Delete rules
@@ -52,7 +53,7 @@ void Dionysus::schedule(int owDpID){
 			}
 		odID = nodes[odDpID].nodeIndex;
 		for(int i = 0; i < (int)operations[odID].ruleSet.size(); i++){
-			fprintf(stderr, "Delete rules @ switch %d\n", operations[odID].ruleSet[i].switchID);
+//			fprintf(stderr, "Delete rules @ switch %d\n", operations[odID].ruleSet[i].switchID);
 			delRuleCnt++;
 		}
 
