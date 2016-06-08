@@ -16,6 +16,7 @@ void Dionysus::start(void){
 	addRuleCnt = 0;
 	modRuleCnt = 0;
 	delRuleCnt = 0;
+	roundCnt = 0;
 
 	// Random seed
 	srand((unsigned)clock());
@@ -70,12 +71,16 @@ void Dionysus::start(void){
 		// Run until all update is finished
 		while(true){
 
+			// Round count
+			roundCnt ++;
+
 			// Update dependency graph
 			updateGraph();
 
 			// Cycle exits when calculating CPL
-			if(!calculateCPL())
-				fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
+			calculateCPL();
+//			if(!calculateCPL())
+//				fprintf(stderr, "WARNING: cycle exists, random CPL assigned.\n");
 
 			// Sort with their CPL
 			sortCPL();
@@ -113,7 +118,7 @@ void Dionysus::start(void){
 
 				// Finished
 				else{
-					fprintf(stderr, "All operation finished.\n");
+//					fprintf(stderr, "All operation finished.\n");
 					break;
 				}
 			}
