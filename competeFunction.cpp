@@ -410,68 +410,56 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	*/
 }
 
+// DFS to mark cycle
+void Compete::dfsCycle(int nowID){
+
+	// Variable
+	int nxtID;
+
+	// Temporary mark
+	dfsVis[nowID] = 1;
+
+	// Neighbor
+	for(int i = 0; i < (int)compNode[nowID].edge.size(); i++){
+		nxtID = compNode[nowID].edge[i].dstID;
+
+		// Cycle found
+		if(dfsVis[nxtID] == 1){
+			hasCycle = true;
+			cycleMark[nxtID] = BLACK;
+		}
+
+		// Not visited
+		else if(!dfsVis[nxtID]) dfsCycle(nxtID);
+	}
+
+	// Finally mark
+	dfsVis[nowID] = 2;
+}
+
 // Check if temporary resource is needed
 bool Compete::needTemp(void){
 
-	// Variable
-	int curID;
-	bool more;
-	GVCNode gtmp;
+	// Initialize mark
+	cycleMark.clear();
+	for(int i = 0; i < (int)compNode.size(); i++)
+		cycleMark.push_back(WHITE);
 
-	// Initialize
-	gvcSize = 0;
-	gvcList.clear();
-	gvcNode.clear();
-	for(int i = 0; i < (int)compNode.size(); i++){
-		gtmp.ID = i;
-		gtmp.degree = compNode[i].edge.size() + compNode[i].prev.size();
-		gvcNode.push_back(gtmp);
-		gvcList.push_back(NOT_VISITED);
-	}
+	// DFS
+	dfsVis.clear();
+	for(int i = 0; i < (int)compNode.size(); i++)
+		if(!dfsVis[i])
+			dfsCycle(i);
 
-	// Sort degree increasingly
-	sort(gvcNode.begin(), gvcNode.end(), cmpGVC);
-
-	// Greedy: step1 - color all nodes as BLACK
-	for(int i = 0; i < (int)gvcNode.size(); i++){
-		curID = gvcNode[i].ID;
-		gvcList[curID] = BLACK;
-		gvcSize++;
-	}
-
-	// Greedy: step2 - remove redundant node from smallest degree
-	for(int i = 0; i < (int)gvcNode.size(); i++){
-		curID = gvcNode[i].ID;
-
-		// For each chosen node
-		if(gvcList[curID] == BLACK){
-			more = true;
-
-			// All neighbors are colored
-			for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-				if(gvcList[ compNode[curID].edge[j].dstID ] != BLACK){
-					more = false;
-					break;
-				}
-			}
-			for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-				if(gvcList[ compNode[curID].prev[j] ] != BLACK){
-					more = false;
-					break;
-				}
-			}
-
-			// Can remove
-			if(more){
-				gvcList[curID] = WHITE;
-				gvcSize--;
-			}
-		}
-	}
+	// Count cycle mark
+	cycleMarkCount = 0;
+	for(int i = 0; i < (int)compNode.size(); i++)
+		if(cycleMark[i] == BLACK)
+			cycleMarkCount++;
 
 	// Return checking result
-	fprintf(stderr, "GVC cnt = %d\n", gvcSize);
-	return gvcSize > 0;
+	fprintf(stderr, "Cycle mark cnt = %d\n", cycleMarkCount);
+	return cycleMarkCount > 0;
 }
 
 // Change current plan to new plan
@@ -506,7 +494,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	for(int i = 0; i < (int)compNode.size(); i++){
 		flowID = compNode[i].flowID;
 		pathID = compNode[i].pathID;
-		if(gvcList[i] == WHITE){
+		if(cycleMark[i] == WHITE){
 
 			// Update the requiring part
 			resDiffCheck(newFlow1[flowID].ingressID, newFlow1[flowID].flowPath[pathID], resDiff);
@@ -533,14 +521,14 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		pathID = compNode[i].pathID;
 
 		// WHITE nodes in MVC: no plan change needed
-		if(gvcList[i] == WHITE){
+		if(cycleMark[i] == WHITE){
 
 			// Copy: I -> F, F -> F
 			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 		}
 
 		// Black nodes in MVC: find out alternative path
-		else if(gvcList[i] == BLACK){
+		else if(cycleMark[i] == BLACK){
 			srcID = allFlow[flowID].ingressID;
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
@@ -1302,11 +1290,6 @@ void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
 // Comparison function for sorting hops
 bool Compete::cmpHop(Link A, Link B){
 	return A.sourceID < B.sourceID;
-}
-
-// Comparison function for sorting greedy-vertex-cover
-bool Compete::cmpGVC(GVCNode A, GVCNode B){
-	return A.degree < B.degree;
 }
 
 // Generate random list (not repeated)

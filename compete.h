@@ -62,7 +62,7 @@ class Compete{
 
 	private:
 		/* Enumeration var for vertex cover */
-		enum{NOT_VISITED, BLACK, WHITE, VISITED};
+		enum{BLACK, WHITE};
 
 	private:
 		/* BFS node */
@@ -109,26 +109,21 @@ class Compete{
 		vector<CompNode>compNode;		// Compete graph
 
 	private:
-		/* For greedy vertex cover */
-		class GVCNode{
-			public:
-				int ID;
-				int degree;
-		};
-		int gvcSize;
-		vector<int>gvcList;
-		vector<GVCNode>gvcNode;
+		/* For DFS cycle */
+		int cycleMarkCount;
+		bool hasCycle;
+		map<int, int>dfsVis;
+		vector<int>cycleMark;
 		
 	private:
 		/* Private function */
-		void backtrack(int, int, int);
 		void occupyRes(const vector<Flow>&, int, int, int, double);
 		void occupyRes(const vector<Link>&, double, vector<CompRes>&);
 		void resDiffCheck(int, FlowPath&, ResDiff&);
 		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&, bool);
 		static bool cmpHop(Link, Link);
-		static bool cmpGVC(GVCNode, GVCNode);
 		void genRandList(vector<int>&, int);
+		void dfsCycle(int);
 };
 
 #endif
