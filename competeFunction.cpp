@@ -435,21 +435,53 @@ void Compete::dfsCycle(int nowID){
 
 	// Finally mark
 	dfsVis[nowID] = 2;
+
+	// Record if not marked
+	if(cycleMark[nowID] != BLACK)
+		revTopo.push_back(nowID);
 }
 
 // Check if temporary resource is needed
 bool Compete::needTemp(void){
+
+	// Variable
+	int nowID, nxtID;
+	map<int, int>topoDis;
 
 	// Initialize mark
 	cycleMark.clear();
 	for(int i = 0; i < (int)compNode.size(); i++)
 		cycleMark.push_back(WHITE);
 
+	// Initialize for topological sort
+	topoDis.clear();
+	for(int i = 0; i < (int)compNode.size(); i++)
+		topoDis[i] = 0;
+
 	// DFS
 	dfsVis.clear();
+	revTopo.clear();
 	for(int i = 0; i < (int)compNode.size(); i++)
 		if(!dfsVis[i])
 			dfsCycle(i);
+
+	// Topo-sequence to mark longest path distance
+	for(int i = revTopo.size()-1; i >= 0; i--){
+
+		// Exceed chain threshold
+		nowID = revTopo[i];
+		if(topoDis[nowID] >= CHAIN_THR){
+			cycleMark[nowID] = BLACK;
+			topoDis[nowID] = 0;
+		}
+
+		// Update neighbors
+		for(int j = 0; j < (int)compNode[nowID].edge.size(); j++){
+			nxtID = compNode[nowID].edge[j].dstID;
+			if(topoDis[nxtID] < topoDis[nowID] + 1)
+				topoDis[nxtID] = topoDis[nowID] + 1;
+		}
+	}
 
 	// Count cycle mark
 	cycleMarkCount = 0;

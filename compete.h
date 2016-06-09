@@ -114,6 +114,7 @@ class Compete{
 		bool hasCycle;
 		map<int, int>dfsVis;
 		vector<int>cycleMark;
+		vector<int>revTopo;
 		
 	private:
 		/* Private function */
