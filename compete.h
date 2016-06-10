@@ -10,8 +10,8 @@ class Compete{
 
 	public:
 		Compete();
-		Compete(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
-		void initialize(const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
+		Compete(const vector< vector< vector<int> > >&, const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
+		void initialize(const vector< vector< vector<int> > >&, const vector<Link>&, const vector<TrancNode>&, const vector<InterNode>&, int);
 		void updateResource(const vector<Flow>&);
 		void flowChangeList(const vector<Flow>&);
 		void createGraph(const vector<Flow>&);
@@ -107,6 +107,7 @@ class Compete{
 		vector<CompRes>compRes;			// Record the remaining resource (initial state)
 		vector<CompRes>lastRes;			// Record the remaining resource (final state)
 		vector<CompNode>compNode;		// Compete graph
+		vector< vector< vector<int> > >wirelessPath;	// Wireless paths
 
 	private:
 		/* For greedy vertex cover */
