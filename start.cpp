@@ -18,9 +18,6 @@ void Dionysus::start(void){
 	delRuleCnt = 0;
 	roundCnt = 0;
 
-	// Random seed
-	srand((unsigned)clock());
-
 	// Check cycling/chaining effect
 	if(checkCompete()){
 		numOfPlan = 2;

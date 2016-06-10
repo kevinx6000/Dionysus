@@ -17,6 +17,10 @@ using namespace std;
 #define LINK_CAPACITY 1000
 #define WIRELESS_RANGE 10.0
 #define CHAIN_THR 10
+#define INF (int)1e9
+
+// Maximum number of edge switches in Fattree
+#define MAX_EDGE 210
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define dis(x1,y1,x2,y2) sqrt(((x1)-(x2))*((x1)-(x2)) + ((y1)-(y2))*((y1)-(y2)))

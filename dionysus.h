@@ -19,6 +19,7 @@ class Dionysus{
 		bool checkCompete(void);				// Check if cycling/chaining exists
 		void reset(void);						// Reset all data structure EXCEPT topology
 		void statistic(void);					// Output statistic report
+		void wirelessPath(void);				// Pre-process wireless shortest path
 
 	private:
 		int pod;								// Pod count of fattree
@@ -37,6 +38,7 @@ class Dionysus{
 		int modRuleCnt;							// Total number of modify rule
 		int delRuleCnt;							// Total number of delete rule
 		int roundCnt;							// Total number of round
+		vector< vector< vector<int> > >wirelessSP;	// Wireless shortest paths
 	
 	private:
 		void requireCap(int, int, int, double);		// Require link capacity (add dependency)
