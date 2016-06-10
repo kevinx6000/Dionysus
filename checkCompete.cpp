@@ -11,7 +11,7 @@ bool Dionysus::checkCompete(void){
 	bool hasCompete = false;
 	
 	// Initialize compete graph checker
-	this->compete.initialize(links, trancNode, interNode, pod);
+	this->compete.initialize(wirelessSP, links, trancNode, interNode, pod);
 
 	// Update initial remaining resource
 	this->compete.updateResource(allFlow);
