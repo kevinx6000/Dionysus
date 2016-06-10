@@ -567,7 +567,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
 
 			// Random wired/wireless path
-			if(rand()%2){
+/*			if(rand()%2){
 
 				// Wired first
 				alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false);
@@ -584,7 +584,12 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 				// Wired if not found
 				if(!alterFound)
 					alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false);
-			}
+			}*/
+
+			// Always wireless first, then wired if wireless not found
+			alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, true);
+			if(!alterFound)
+				alterFound = alterPath(edg, compRes, lastRes, srcID, dstID, traffic, newFlow1[flowID].flowPath[pathID], newPath, resDiff, resDiff2, false);
 
 			// Try to find out an alternative path
 			if(alterFound){
