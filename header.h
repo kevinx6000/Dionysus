@@ -16,7 +16,7 @@ using namespace std;
 #define TCAM_CAPACITY 1500
 #define LINK_CAPACITY 1000
 #define WIRELESS_RANGE 10.0
-#define CHAIN_THR 10
+#define CHAIN_THR 2
 #define INF (int)1e9
 
 // Maximum number of edge switches in Fattree
