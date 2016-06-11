@@ -20,9 +20,6 @@ void Dionysus::start(void){
 	// Run until all update is finished
 	while(true){
 
-		// Round count
-		roundCnt ++;
-
 		// Update dependency graph
 		updateGraph();
 
@@ -72,5 +69,8 @@ void Dionysus::start(void){
 				break;
 			}
 		}
+
+		// Round count
+		roundCnt ++;
 	}
 }
