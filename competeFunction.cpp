@@ -428,6 +428,7 @@ bool Compete::needTemp(void){
 	for(int i = 0; i < (int)compNode.size(); i++){
 		gtmp.ID = i;
 		gtmp.degree = compNode[i].edge.size() + compNode[i].prev.size();
+		gtmp.indegree = compNode[i].prev.size();
 		gvcNode.push_back(gtmp);
 		gvcList.push_back(NOT_VISITED);
 	}
@@ -442,7 +443,16 @@ bool Compete::needTemp(void){
 		gvcSize++;
 	}
 
-	// Greedy: step2 - remove redundant node from smallest degree
+	// Greedy: step2 - remove all node with indegree = 0 (no need for alternative path)
+	for(int i = 0; i < (int)gvcNode.size(); i++){
+		curID = gvcNode[i].ID;
+		if(gvcNode[i].indegree == 0 && gvcList[curID] == BLACK){
+			gvcList[curID] = WHITE;
+			gvcSize--;
+		}
+	}
+
+	// Greedy: step3 - remove redundant node from smallest degree
 	for(int i = 0; i < (int)gvcNode.size(); i++){
 		curID = gvcNode[i].ID;
 

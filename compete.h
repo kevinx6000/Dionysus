@@ -115,6 +115,7 @@ class Compete{
 			public:
 				int ID;
 				int degree;
+				int indegree;
 		};
 		int gvcSize;
 		vector<int>gvcList;
