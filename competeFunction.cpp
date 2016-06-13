@@ -470,9 +470,23 @@ bool Compete::needTemp(void){
 
 	// Topo-sequence to mark longest path distance
 	for(int i = revTopo.size()-1; i >= 0; i--){
+		nowID = revTopo[i];
+
+		// First node in chain
+		if(topoDis[nowID] == 0){
+			bool hasBlackParent = false;
+			for(int j = 0; j < (int)compNode[nowID].prev.size(); j++){
+				if(cycleMark[ compNode[nowID].prev[j] ] == BLACK){
+					hasBlackParent = true;
+					break;
+				}
+			}
+
+			// Has Black node as parent: result from cycle
+			if(hasBlackParent) cycleMark[nowID] = BLACK;
+		}
 
 		// Exceed chain threshold
-		nowID = revTopo[i];
 		if(topoDis[nowID] >= CHAIN_THR){
 			cycleMark[nowID] = BLACK;
 			topoDis[nowID] = 0;
