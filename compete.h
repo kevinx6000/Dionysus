@@ -20,6 +20,20 @@ class Compete{
 		~Compete();
 
 	private:
+		/* Recoding requiring resource ID and traffic for each flow */
+		class FlowRequireHelp{
+			public:
+				int resID;
+				double reqTraffic;
+		};
+		class FlowRequire{
+			public:
+				int flowID;
+				int pathID;
+				vector<FlowRequireHelp>reqList;
+		};
+
+	private:
 		/* Flow pair for recording usage */
 		class FlowPair{
 			public:
@@ -38,7 +52,9 @@ class Compete{
 				int resType;			// Resource type
 				int relCnt;				// Temporary release count
 				int reqCnt;				// Temporary require count
+				double totReq;			// Total requiring resource
 				double resCap;			// Resource capacity
+				double copyCap;			// Copy capacity for competitive graph
 				bool isWireless;		// Check if wireless
 				vector<int>iList;		// Interference nodes (wireless link only)
 				vector<FlowPair>relList;
@@ -108,6 +124,7 @@ class Compete{
 		vector<CompRes>lastRes;			// Record the remaining resource (final state)
 		vector<CompNode>compNode;		// Compete graph
 		vector< vector< vector<int> > >wirelessPath;	// Wireless paths
+		vector<FlowRequire>flowReq;		// Record requiring resource for each flow
 
 	private:
 		/* For DFS cycle */
