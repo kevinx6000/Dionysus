@@ -38,6 +38,7 @@ class Compete{
 				int resType;			// Resource type
 				int relCnt;				// Temporary release count
 				int reqCnt;				// Temporary require count
+				double totReq;			// Total volume of requiring traffic
 				double resCap;			// Resource capacity
 				bool isWireless;		// Check if wireless
 				vector<int>iList;		// Interference nodes (wireless link only)
@@ -108,18 +109,7 @@ class Compete{
 		vector<CompRes>lastRes;			// Record the remaining resource (final state)
 		vector<CompNode>compNode;		// Compete graph
 		vector< vector< vector<int> > >wirelessPath;	// Wireless paths
-
-	private:
-		/* For greedy vertex cover */
-		class GVCNode{
-			public:
-				int ID;
-				int degree;
-				int indegree;
-		};
-		int gvcSize;
-		vector<int>gvcList;
-		vector<GVCNode>gvcNode;
+		vector<int>colorList;
 		
 	private:
 		/* Private function */
@@ -129,7 +119,6 @@ class Compete{
 		void resDiffCheck(int, FlowPath&, ResDiff&);
 		bool alterPath(const vector< vector<int> >&, const vector<CompRes>&, const vector<CompRes>&, int, int, double, const FlowPath&, vector<Link>&, ResDiff&, ResDiff&, bool);
 		static bool cmpHop(Link, Link);
-		static bool cmpGVC(GVCNode, GVCNode);
 		void genRandList(vector<int>&, int);
 };
 

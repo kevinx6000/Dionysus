@@ -359,10 +359,19 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 
 	// Create edge if competition exist
 	for(int resID = 0; resID < (int)compRes.size(); resID++){
+
+		// Step1: Sum up all traffic that requires this resource
+		compRes[resID].totReq = 0.0;
+		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++)
+			compRes[resID].totReq += compRes[resID].reqList[reqID].traffic;
+
+		// Step2: If sum of all traffic requiring this resource > available capacity,
+		// all these flows will need to create an edge from requiring flow to releasing flow
 		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++){
 
 			// Cannot get resource at once
-			if(compRes[resID].reqList[reqID].traffic > compRes[resID].resCap){
+//			if(compRes[resID].reqList[reqID].traffic > compRes[resID].resCap){
+			if(compRes[resID].totReq > compRes[resID].resCap){
 
 				// No releasing resource: DEADLOCK
 				if((int)compRes[resID].relList.size() == 0){
@@ -417,74 +426,25 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 bool Compete::needTemp(void){
 
 	// Variable
-	int curID;
-	bool more;
-	GVCNode gtmp;
+	int pickCnt;
 
 	// Initialize
-	gvcSize = 0;
-	gvcList.clear();
-	gvcNode.clear();
+	pickCnt = 0;
+	colorList.clear();
+	for(int i = 0; i < (int)compNode.size(); i++)
+		colorList.push_back(WHITE);
+
+	// Color all nodes with degree > 0 as BLACK
 	for(int i = 0; i < (int)compNode.size(); i++){
-		gtmp.ID = i;
-		gtmp.degree = compNode[i].edge.size() + compNode[i].prev.size();
-		gtmp.indegree = compNode[i].prev.size();
-		gvcNode.push_back(gtmp);
-		gvcList.push_back(NOT_VISITED);
-	}
-
-	// Sort degree increasingly
-	sort(gvcNode.begin(), gvcNode.end(), cmpGVC);
-
-	// Greedy: step1 - color all nodes as BLACK
-	for(int i = 0; i < (int)gvcNode.size(); i++){
-		curID = gvcNode[i].ID;
-		gvcList[curID] = BLACK;
-		gvcSize++;
-	}
-
-	// Greedy: step2 - remove all node with indegree = 0 (no need for alternative path)
-	for(int i = 0; i < (int)gvcNode.size(); i++){
-		curID = gvcNode[i].ID;
-		if(gvcNode[i].indegree == 0 && gvcList[curID] == BLACK){
-			gvcList[curID] = WHITE;
-			gvcSize--;
-		}
-	}
-
-	// Greedy: step3 - remove redundant node from smallest degree
-	for(int i = 0; i < (int)gvcNode.size(); i++){
-		curID = gvcNode[i].ID;
-
-		// For each chosen node
-		if(gvcList[curID] == BLACK){
-			more = true;
-
-			// All neighbors are colored
-			for(int j = 0; j < (int)compNode[curID].edge.size(); j++){
-				if(gvcList[ compNode[curID].edge[j].dstID ] != BLACK){
-					more = false;
-					break;
-				}
-			}
-			for(int j = 0; j < (int)compNode[curID].prev.size(); j++){
-				if(gvcList[ compNode[curID].prev[j] ] != BLACK){
-					more = false;
-					break;
-				}
-			}
-
-			// Can remove
-			if(more){
-				gvcList[curID] = WHITE;
-				gvcSize--;
-			}
+		if(compNode[i].edge.size() + compNode[i].prev.size() > 0){
+			colorList[i] = BLACK;
+			pickCnt++;
 		}
 	}
 
 	// Return checking result
-	//fprintf(stderr, "GVC cnt = %d\n", gvcSize);
-	return gvcSize > 0;
+//	fprintf(stderr, "[Info] pick cnt = %d\n", pickCnt);
+	return pickCnt > 0;
 }
 
 // Change current plan to new plan
@@ -520,7 +480,7 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 	for(int i = 0; i < (int)compNode.size(); i++){
 		flowID = compNode[i].flowID;
 		pathID = compNode[i].pathID;
-		if(gvcList[i] == WHITE){
+		if(colorList[i] == WHITE){
 
 			// Update the requiring part
 			resDiffCheck(newFlow1[flowID].ingressID, newFlow1[flowID].flowPath[pathID], resDiff);
@@ -547,14 +507,14 @@ void Compete::changePlan(const vector<Link>& initLink, const vector<Flow>& allFl
 		pathID = compNode[i].pathID;
 
 		// WHITE nodes in MVC: no plan change needed
-		if(gvcList[i] == WHITE){
+		if(colorList[i] == WHITE){
 
 			// Copy: I -> F, F -> F
 			newFlow2[flowID].flowPath[pathID].link[0] = newFlow2[flowID].flowPath[pathID].link[1];
 		}
 
 		// Black nodes in MVC: find out alternative path
-		else if(gvcList[i] == BLACK){
+		else if(colorList[i] == BLACK){
 			srcID = allFlow[flowID].ingressID;
 			dstID = allFlow[flowID].flowPath[pathID].dstID[1];
 			traffic = allFlow[flowID].flowPath[pathID].traffic;
@@ -730,7 +690,7 @@ bool Compete::alterPath(const vector< vector<int> >& edg, const vector<CompRes>&
 				linkID = linkMap[nowID][nxtID];
 
 				// Stage1
-				if(state == 1){
+				if(state == 0){
 					used1[nowID][nxtID] = true;
 					for(int j = 0; j < (int)stage1[linkID].iList.size(); j++)
 						interCnt[0][ stage1[ stage1[linkID].iList[j] ].srcID ]++;
@@ -1319,11 +1279,6 @@ void Compete::resDiffCheck(int ingressID, FlowPath& flowPath, ResDiff& resDiff){
 // Comparison function for sorting hops
 bool Compete::cmpHop(Link A, Link B){
 	return A.sourceID < B.sourceID;
-}
-
-// Comparison function for sorting greedy-vertex-cover
-bool Compete::cmpGVC(GVCNode A, GVCNode B){
-	return A.degree < B.degree;
 }
 
 // Generate random list (not repeated)
