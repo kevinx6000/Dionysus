@@ -129,6 +129,8 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 	set<int>trancSwitch;
 	set<int>interSwitch;
 	set<int>::iterator setItr;
+	FlowRequireHelp fReqHelp;
+	FlowRequire fReqTmp;
 
 	// Each path flow
 	for(int flowID = 0; flowID < (int)allFlow.size(); flowID++){
@@ -139,6 +141,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 			ftmp.flowID = flowID;
 			ftmp.pathID = pathID;
 			ftmp.traffic = traffic = allFlow[flowID].flowPath[pathID].traffic;
+
+			fReqTmp.flowID = flowID;
+			fReqTmp.pathID = pathID;
 
 			// Initialize transceiver and interference resource to zero
 			trancSwitch.clear();
@@ -185,6 +190,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 					if(dID1 != dID2){
 						compRes[ linkMap[sID1][dID1] ].relList.push_back(ftmp);
 						compRes[ linkMap[sID2][dID2] ].reqList.push_back(ftmp);
+						fReqHelp.resID = linkMap[sID2][dID2];
+						fReqHelp.reqTraffic = traffic;
+						fReqTmp.reqList.push_back(fReqHelp);
 					}
 					ptr1++;
 					ptr2++;
@@ -193,6 +201,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 				// Add switch sID2
 				else if(sID1 > sID2){
 					compRes[ linkMap[sID2][dID2] ].reqList.push_back(ftmp);
+					fReqHelp.resID = linkMap[sID2][dID2];
+					fReqHelp.reqTraffic = traffic;
+					fReqTmp.reqList.push_back(fReqHelp);
 					ptr2++;
 				}
 
@@ -224,6 +235,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 					continue;
 				}
 				compRes[ linkMap[sID2][dID2] ].reqList.push_back(ftmp);
+				fReqHelp.resID = linkMap[sID2][dID2];
+				fReqHelp.reqTraffic = traffic;
+				fReqTmp.reqList.push_back(fReqHelp);
 				ptr2++;
 			}
 
@@ -234,6 +248,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 			if(dID1 != dID2){
 				compRes[ linkMap[sID1][dID1] ].relList.push_back(ftmp);
 				compRes[ linkMap[sID1][dID2] ].reqList.push_back(ftmp);
+				fReqHelp.resID = linkMap[sID1][dID2];
+				fReqHelp.reqTraffic = traffic;
+				fReqTmp.reqList.push_back(fReqHelp);
 			}
 
 			// Release/require count for transceiver and interference resource
@@ -274,6 +291,9 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 				if(relCnt < reqCnt){
 					ftmp.traffic = (reqCnt - relCnt) * traffic;
 					compRes[ *setItr ].reqList.push_back(ftmp);
+					fReqHelp.resID = *setItr;
+					fReqHelp.reqTraffic = ftmp.traffic;
+					fReqTmp.reqList.push_back(fReqHelp);
 				}
 				else if(relCnt > reqCnt){
 					ftmp.traffic = (relCnt - reqCnt) * traffic;
@@ -286,12 +306,21 @@ void Compete::flowChangeList(const vector<Flow>& allFlow){
 				if(relCnt < reqCnt){
 					ftmp.traffic = (reqCnt - relCnt) * traffic;
 					compRes[ *setItr ].reqList.push_back(ftmp);
+					fReqHelp.resID = *setItr;
+					fReqHelp.reqTraffic = ftmp.traffic;
+					fReqTmp.reqList.push_back(fReqHelp);
 				}
 				else if(relCnt > reqCnt){
 					ftmp.traffic = (relCnt - reqCnt) * traffic;
 					compRes[ *setItr ].relList.push_back(ftmp);
 				}
 			}
+
+			// Record requiring resource
+			flowReq.push_back(fReqTmp);
+
+			// Clear
+			fReqTmp.reqList.clear();
 		}
 	}
 
@@ -345,6 +374,7 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 	CompEdge etmp;
 	map<int, int>mtmp;
 	vector< map<int, int> >flowMap;
+	map<int, bool>allOK;
 
 	// Create node for each path flow
 	for(flowID = 0; flowID < (int)allFlow.size(); flowID++){
@@ -357,21 +387,52 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 		}
 	}
 
+	// Copy capacity of current resource
+	for(int i = 0; i < (int)compRes.size(); i++)
+		compRes[i].copyCap = compRes[i].resCap;
+
+	// For each requiring resource
+	for(int i = 0; i < (int)flowReq.size(); i++){
+		flowID = flowReq[i].flowID;
+		pathID = flowReq[i].pathID;
+		allOK[ flowMap[flowID][pathID] ] = true;
+		for(int j = 0; j < (int)flowReq[i].reqList.size(); j++){
+			if(flowReq[i].reqList[j].reqTraffic > compRes[ flowReq[i].reqList[j].resID ].copyCap){
+				allOK[ flowMap[flowID][pathID] ] = false;
+				break;
+			}
+		}
+
+		// If all resource are enough, reserve all resource of this flow
+		if(allOK[ flowMap[flowID][pathID] ]){
+			for(int j = 0; j < (int)flowReq[i].reqList.size(); j++)
+				compRes[ flowReq[i].reqList[j].resID ].copyCap -= flowReq[i].reqList[j].reqTraffic;
+		}
+	}
+
 	// Create edge if competition exist
 	for(int resID = 0; resID < (int)compRes.size(); resID++){
 
 		// Step1: Sum up all traffic that requires this resource
 		compRes[resID].totReq = 0.0;
-		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++)
-			compRes[resID].totReq += compRes[resID].reqList[reqID].traffic;
+		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++){
+			flowID = compRes[resID].reqList[reqID].flowID;
+			pathID = compRes[resID].reqList[reqID].pathID;
+			if(!allOK[ flowMap[flowID][pathID] ])
+				compRes[resID].totReq += compRes[resID].reqList[reqID].traffic;
+		}
 
 		// Step2: If sum of all traffic requiring this resource > available capacity,
 		// all these flows will need to create an edge from requiring flow to releasing flow
+		// Except: already reserved ones
 		for(int reqID = 0; reqID < (int)compRes[resID].reqList.size(); reqID++){
+			flowID = compRes[resID].reqList[reqID].flowID;
+			pathID = compRes[resID].reqList[reqID].pathID;
+			if(allOK[ flowMap[flowID][pathID] ]) continue;
 
 			// Cannot get resource at once
 //			if(compRes[resID].reqList[reqID].traffic > compRes[resID].resCap){
-			if(compRes[resID].totReq > compRes[resID].resCap){
+			if(compRes[resID].totReq > compRes[resID].copyCap){
 
 				// No releasing resource: DEADLOCK
 				if((int)compRes[resID].relList.size() == 0){
@@ -380,8 +441,6 @@ void Compete::createGraph(const vector<Flow> &allFlow){
 				}
 
 				// Create edge from requiring to releasing
-				flowID = compRes[resID].reqList[reqID].flowID;
-				pathID = compRes[resID].reqList[reqID].pathID;
 				etmp.resID = resID;
 				etmp.dstID = flowMap[flowID][pathID];
 				for(int relID = 0; relID < (int)compRes[resID].relList.size(); relID++){
