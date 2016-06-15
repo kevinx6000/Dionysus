@@ -10,5 +10,10 @@ void Dionysus::statistic(void){
 //	fprintf(stderr, "Mod rules = %d\n", modRuleCnt);
 //	fprintf(stderr, "Del rules = %d\n", delRuleCnt);
 //	fprintf(stderr, "Round = %d\n", roundCnt);
+//	int alterRuleCnt = 0;
+//	for(int i = 0; i < (int)allFlow.size(); i++)
+//		if(isAlterFlow[i])
+//			alterRuleCnt += flowModCnt[i];
+//	printf("%d %d %d %d %d\n", addRuleCnt, modRuleCnt, delRuleCnt, alterRuleCnt, roundCnt);
 	printf("%d %d %d %d\n", addRuleCnt, modRuleCnt, delRuleCnt, roundCnt);
 }

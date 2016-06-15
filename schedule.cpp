@@ -8,8 +8,10 @@ void Dionysus::schedule(int owDpID){
 
 	// Variable
 //	int fTag;
+//	int curFlowID;
 	int oaID, owID, odID;
 	int oaDpID, odDpID;
+//	int tmpCnt;
 	double totTraffic;
 
 	// Update according to rulesets inside operation nodes
@@ -18,6 +20,8 @@ void Dionysus::schedule(int owDpID){
 		// Flow Tag
 //		fTag = operations[ nodes[owDpID].nodeIndex ].flowTag;
 //		fprintf(stderr, "Flow %d:\n", fTag);
+//		curFlowID = operations[ nodes[owDpID].nodeIndex ].flowID;
+//		tmpCnt = 0;
 
 		// Add rules
 		oaDpID = mapID[ nodes[owDpID].parent[0] ];
@@ -31,6 +35,7 @@ void Dionysus::schedule(int owDpID){
 //				fprintf(stderr, " %.2lf", operations[oaID].ruleSet[i].traffic[j]/totTraffic);
 //			fprintf(stderr, "\n");
 			addRuleCnt++;
+//			tmpCnt++;
 		}
 
 		// Modify rules
@@ -43,6 +48,7 @@ void Dionysus::schedule(int owDpID){
 //			fprintf(stderr, " %.2lf", operations[owID].ruleSet[0].traffic[i]/totTraffic);
 //		fprintf(stderr, "\n");
 		modRuleCnt++;
+//		tmpCnt++;
 
 		// Delete rules
 		odDpID = -1;
@@ -55,12 +61,14 @@ void Dionysus::schedule(int owDpID){
 		for(int i = 0; i < (int)operations[odID].ruleSet.size(); i++){
 //			fprintf(stderr, "Delete rules @ switch %d\n", operations[odID].ruleSet[i].switchID);
 			delRuleCnt++;
+//			tmpCnt++;
 		}
 
 		// Mark three operation nodes as finished
 		operations[oaID].isFinished = true;
 		operations[owID].isFinished = true;
 		operations[odID].isFinished = true;
+//		flowModCnt[curFlowID] += tmpCnt;
 	}
 
 	// No update needed

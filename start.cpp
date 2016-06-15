@@ -55,6 +55,11 @@ void Dionysus::start(void){
 		numOfPlan = 1;
 		newFlow[0] = allFlow;
 	}
+	
+	// Initialize flow count
+//	isAlterFlow.clear();
+//	for(int i = 0; i < (int)allFlow.size(); i++)
+//		flowModCnt.push_back(0);
 
 	// Transition plan(s)
 	for(int plan = 0; plan < numOfPlan; plan++){
@@ -85,6 +90,7 @@ void Dionysus::start(void){
 				if(canSchedule(mapID[ nodes[i].nodeID ], newFlow[plan])){
 					schedule(mapID[ nodes[i].nodeID ]);
 					isScheduled = true;
+//					if(plan == 1) isAlterFlow[ operations[ nodes[ mapID[ nodes[i].nodeID ] ].nodeIndex ].flowID ] = true;
 				}
 
 			// No operation scheduled

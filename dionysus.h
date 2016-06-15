@@ -39,6 +39,8 @@ class Dionysus{
 		int delRuleCnt;							// Total number of delete rule
 		int roundCnt;							// Total number of round
 		vector< vector< vector<int> > >wirelessSP;	// Wireless shortest paths
+//		vector<int>flowModCnt;
+//		map<int, bool>isAlterFlow;
 	
 	private:
 		void requireCap(int, int, int, double);		// Require link capacity (add dependency)
