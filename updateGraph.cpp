@@ -8,7 +8,6 @@ void Dionysus::updateGraph(void){
 
 	// Variables
 	int rDpID, pDpID, pID, oaDpID, odID;
-	int ratio;
 	bool hasPathChild;
 
 	// For each finished operation node
@@ -49,40 +48,6 @@ void Dionysus::updateGraph(void){
 								nodes[pDpID].child[k].dobWeight -= paths[pID].committed;
 
 								// Finish: all resource released on this link
-								if(nodes[pDpID].child[k].dobWeight <= 0){
-									nodes[pDpID].child.erase( nodes[pDpID].child.begin() + k );
-									k--;
-								}
-							}
-
-							// Transceiver
-							if(nodes[rDpID].nodeType == RES_TRANC){
-
-								// Ratio
-								ratio = nodes[pDpID].child[k].intWeight;
-
-								// Update transceiver
-								trancNode[ nodes[rDpID].nodeIndex ].nodeCapacity += paths[pID].committed * ratio;
-								nodes[pDpID].child[k].dobWeight -= paths[pID].committed * ratio;
-
-								// Finish: all resource released on this node
-								if(nodes[pDpID].child[k].dobWeight <= 0){
-									nodes[pDpID].child.erase( nodes[pDpID].child.begin() + k );
-									k--;
-								}
-							}
-
-							// Interference
-							if(nodes[rDpID].nodeType == RES_INTER){
-
-								// Ratio
-								ratio = nodes[pDpID].child[k].intWeight;
-
-								// Update transceiver
-								interNode[ nodes[rDpID].nodeIndex ].nodeCapacity += paths[pID].committed * ratio;
-								nodes[pDpID].child[k].dobWeight -= paths[pID].committed * ratio;
-
-								// Finish: all resource released on this node
 								if(nodes[pDpID].child[k].dobWeight <= 0){
 									nodes[pDpID].child.erase( nodes[pDpID].child.begin() + k );
 									k--;
@@ -184,60 +149,5 @@ void Dionysus::updateGraph(void){
 				nodes[i].child.clear();
 			}
 		}
-/*
-		// Transceiver node
-		if(nodes[i].nodeType == RES_TRANC){
-
-			// All needed resource
-			double need = 0;
-			for(int j = 0; j < (int)nodes[i].child.size(); j++)
-				need += nodes[i].child[j].dobWeight;
-
-			// Link usage is enough for all links
-			int index = nodes[i].nodeIndex;
-			if(trancNode[index].nodeCapacity >= need){
-				trancNode[index].nodeCapacity -= need;
-
-				// Also delete the links from Path to Link
-				for(int j = 0; j < (int)nodes[i].child.size(); j++){
-					int child = mapID[ nodes[i].child[j].nodeID ];
-					for(int k = 0; k < (int)nodes[child].parent.size(); k++){
-						if(nodes[child].parent[k] == nodes[i].nodeID){
-							nodes[child].parent.erase(nodes[child].parent.begin()+k);
-							break;
-						}
-					}
-				}
-				nodes[i].child.clear();
-			}
-		}
-
-		// Interference node
-		if(nodes[i].nodeType == RES_INTER){
-
-			// All needed resource
-			double need = 0;
-			for(int j = 0; j < (int)nodes[i].child.size(); j++)
-				need += nodes[i].child[j].dobWeight;
-
-			// Link usage is enough for all links
-			int index = nodes[i].nodeIndex;
-			if(interNode[index].nodeCapacity >= need){
-				interNode[index].nodeCapacity -= need;
-
-				// Also delete the links from Path to Link
-				for(int j = 0; j < (int)nodes[i].child.size(); j++){
-					int child = mapID[ nodes[i].child[j].nodeID ];
-					for(int k = 0; k < (int)nodes[child].parent.size(); k++){
-						if(nodes[child].parent[k] == nodes[i].nodeID){
-							nodes[child].parent.erase(nodes[child].parent.begin()+k);
-							break;
-						}
-					}
-				}
-				nodes[i].child.clear();
-			}
-		}
-		*/
 	}
 }

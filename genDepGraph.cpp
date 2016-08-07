@@ -8,16 +8,12 @@ void Dionysus::genDepGraph(void){
 
 	// Variables
 	int pInDpID, pOutDpID, sID1, sID2, dID1, dID2, owDpID, oaDpID, odDpID, ingPtr1, ingPtr2;
-	int ptr1, ptr2, siz1, siz2, portID, srcID, dstID;
-	int requireCnt, releaseCnt;
+	int ptr1, ptr2, siz1, siz2;
 	bool hasDiff, exist;
 	double traffic;
 	Path ptmp;
 	Edge etmp;
 	Operation otmp;
-	set<int>trancSwitch;
-	set<int>interSwitch;
-	set<int>::iterator setItr;
 
 	// Resource Node: switch
 	for(int i = 0; i < (int)switches.size(); i++)
@@ -26,14 +22,6 @@ void Dionysus::genDepGraph(void){
 	// Resource Node: link
 	for(int i = 0; i < (int)links.size(); i++)
 		links[i].dpID = createNode(RES_LINK, i);
-
-	// Resource Node: transceiver
-	for(int i = 0; i < (int)trancNode.size(); i++)
-		trancNode[i].dpID = createNode(RES_TRANC, i);
-
-	// Resource Node: interference
-	for(int i = 0; i < (int)interNode.size(); i++)
-		interNode[i].dpID = createNode(RES_INTER, i);
 
 	// For each flow
 	for(int i = 0; i < (int)allFlow.size(); i++){
@@ -74,39 +62,6 @@ void Dionysus::genDepGraph(void){
 			// Sort path links according to their ID
 			sort(allFlow[i].flowPath[j].link[0].begin(), allFlow[i].flowPath[j].link[0].end(), cmpPATH);
 			sort(allFlow[i].flowPath[j].link[1].begin(), allFlow[i].flowPath[j].link[1].end(), cmpPATH);
-
-			// Find out transceiver switches and interference switches
-			trancSwitch.clear();
-			interSwitch.clear();
-			for(int state = 0; state < 2; state++){
-				for(int k = 0; k < (int)allFlow[i].flowPath[j].link[state].size(); k++){
-					srcID = allFlow[i].flowPath[j].link[state][k].sourceID;
-					dstID = allFlow[i].flowPath[j].link[state][k].destinationID;
-					portID = findDstPort(srcID, dstID);
-					if(portID != -1){
-						if(links[ switches[srcID].linkID[portID] ].isWireless){
-							trancSwitch.insert(srcID);
-							trancSwitch.insert(dstID);
-							for(int interID = 0; interID < (int)links[ switches[srcID].linkID[portID] ].iList.size(); interID++)
-								interSwitch.insert(links[ switches[srcID].linkID[portID] ].iList[interID]);
-						}
-					}
-					else{
-						fprintf(stderr, "Error: no such destination ID = %d exists from source ID = %d\n", dstID, srcID);
-						exit(1);
-					}
-				}
-			}
-
-			// Initialize release and require count as zero
-			for(setItr = trancSwitch.begin(); setItr != trancSwitch.end(); setItr++){
-				trancNode[ switches[*setItr].trancID ].releaseCnt = 0;
-				trancNode[ switches[*setItr].trancID ].requireCnt = 0;
-			}
-			for(setItr = interSwitch.begin(); setItr != interSwitch.end(); setItr++){
-				interNode[ switches[*setItr].interID ].releaseCnt = 0;
-				interNode[ switches[*setItr].interID ].requireCnt = 0;
-			}
 
 			// Record traffic size
 			traffic = allFlow[i].flowPath[j].traffic;
@@ -438,92 +393,6 @@ void Dionysus::genDepGraph(void){
 				/* Weight?? */
 				nodes[owDpID].child.push_back(etmp);
 				nodes[pOutDpID].parent.push_back(owDpID);
-
-				// Count release/require on before/after paths
-				for(int state = 0; state < 2; state++){
-					for(int k = 0; k < (int)allFlow[i].flowPath[j].link[state].size(); k++){
-						srcID = allFlow[i].flowPath[j].link[state][k].sourceID;
-						dstID = allFlow[i].flowPath[j].link[state][k].destinationID;
-						portID = findDstPort(srcID, dstID);
-						if(portID != -1){
-							if(links[ switches[srcID].linkID[portID] ].isWireless){
-							
-								// Before: release
-								if(state < 1){
-									trancNode[ switches[srcID].trancID ].releaseCnt ++;
-									trancNode[ switches[dstID].trancID ].releaseCnt ++;
-									for(int interID = 0; interID < (int)links[ switches[srcID].linkID[portID] ].iList.size(); interID++)
-										interNode[ switches[ links[ switches[srcID].linkID[portID] ].iList[interID] ].interID ].releaseCnt ++;
-								}
-
-								// After
-								else{
-									trancNode[ switches[srcID].trancID ].requireCnt ++;
-									trancNode[ switches[dstID].trancID ].requireCnt ++;
-									for(int interID = 0; interID < (int)links[ switches[srcID].linkID[portID] ].iList.size(); interID++)
-										interNode[ switches[ links[ switches[srcID].linkID[portID] ].iList[interID] ].interID ].requireCnt ++;
-
-								}
-							}
-						}
-						else{
-							fprintf(stderr, "Error: no such destination ID = %d exists from source ID = %d\n", dstID, srcID);
-							exit(1);
-						}
-					}
-				}
-
-				// Add dependency link: Transceiver
-				for(setItr = trancSwitch.begin(); setItr != trancSwitch.end(); setItr++){
-					releaseCnt = trancNode[ switches[*setItr].trancID ].releaseCnt;
-					requireCnt = trancNode[ switches[*setItr].trancID ].requireCnt;
-
-					// Transceiver -> Path
-					if(releaseCnt < requireCnt){
-//						printf("T->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
-						etmp.nodeID = pInDpID;
-						etmp.intWeight = requireCnt - releaseCnt;
-						etmp.dobWeight = (requireCnt - releaseCnt) * traffic;
-						nodes[ trancNode[ switches[*setItr].trancID ].dpID ].child.push_back(etmp);
-						nodes[ pInDpID ].parent.push_back( trancNode[ switches[*setItr].trancID ].dpID );
-					}
-
-					// Path -> Transceiver
-					else if(releaseCnt > requireCnt){
-//						printf("P->T(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
-						etmp.nodeID = trancNode[ switches[*setItr].trancID ].dpID;
-						etmp.intWeight = releaseCnt - requireCnt;
-						etmp.dobWeight = (releaseCnt - requireCnt) * traffic;
-						nodes[ pOutDpID ].child.push_back(etmp);
-						nodes[ trancNode[ switches[*setItr].trancID ].dpID ].parent.push_back(pOutDpID);
-					}
-				}
-			
-				// Add dependency link: Interference
-				for(setItr = interSwitch.begin(); setItr != interSwitch.end(); setItr++){
-					releaseCnt = interNode[ switches[*setItr].interID ].releaseCnt;
-					requireCnt = interNode[ switches[*setItr].interID ].requireCnt;
-
-					// Interference -> Path
-					if(releaseCnt < requireCnt){
-//						printf("I->P(%d): %d x %.2lf\n", *setItr, requireCnt - releaseCnt, traffic);
-						etmp.nodeID = pInDpID;
-						etmp.intWeight = requireCnt - releaseCnt;
-						etmp.dobWeight = (requireCnt - releaseCnt) * traffic;
-						nodes[ interNode[ switches[*setItr].interID ].dpID ].child.push_back(etmp);
-						nodes[ pInDpID ].parent.push_back( interNode[ switches[*setItr].interID ].dpID );
-					}
-
-					// Path -> Interference
-					else if(releaseCnt > requireCnt){
-//						printf("P->I(%d): %d x %.2lf\n", *setItr, releaseCnt - requireCnt, traffic);
-						etmp.nodeID = interNode[ switches[*setItr].interID ].dpID;
-						etmp.intWeight = releaseCnt - requireCnt;
-						etmp.dobWeight = (releaseCnt - requireCnt) * traffic;
-						nodes[ pOutDpID ].child.push_back(etmp);
-						nodes[ interNode[ switches[*setItr].interID ].dpID ].parent.push_back(pOutDpID);
-					}
-				}
 			}
 		}
 	}

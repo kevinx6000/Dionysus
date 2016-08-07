@@ -1,7 +1,7 @@
 F = 
 CC = g++
 CFLAGS = -c -Wall $(F)
-SRCS = main.cpp readInput.cpp genDepGraph.cpp updateGraph.cpp calculateCPL.cpp sortCPL.cpp canSchedule.cpp start.cpp schedule.cpp vectorOP.cpp debug.cpp statistic.cpp
+SRCS = main.cpp readInput.cpp genDepGraph.cpp updateGraph.cpp calculateCPL.cpp sortCPL.cpp canSchedule.cpp start.cpp schedule.cpp debug.cpp statistic.cpp
 OBJS = $(SRCS:.cpp=.o)
 EXEC = main
 TESTCASE = input.txt

@@ -14,22 +14,8 @@ void Dionysus::readTopo(void){
 	int numOfEdge;
 	int src;
 	int dst;
-	int mid;
-	double widSw;
-	double lenSw;
-	double x1, y1, x2, y2;
 	Switch stmp;
 	Link ltmp;
-	TrancNode ttmp;
-	InterNode itmp;
-
-	// Constants
-	const double feet = 0.3048;
-	const double inch = 0.0254;
-
-	// Width and length of switch
-	widSw = 24*inch;
-	lenSw = 48*inch;
 
 	// Fattree index K
 	scanf("%d", &k);
@@ -45,26 +31,15 @@ void Dionysus::readTopo(void){
 	n = numOfCore + numOfAggr + numOfEdge;
 
 	// Initial value of TCAM and Link capacity
-	// Wired link
 	stmp.tcamUsage = TCAM_CAPACITY;
 	ltmp.linkCapacity = LINK_CAPACITY;
-	ltmp.isWireless = false;
-	ttmp.nodeCapacity = LINK_CAPACITY;
-	itmp.nodeCapacity = LINK_CAPACITY;
 
 	// Create switches
 	for(int i = 0; i < n; i++){
 
 		// Initialize
 		stmp.switchID = i;
-		stmp.tcamUsage = TCAM_CAPACITY;
 		switches.push_back(stmp);
-	}
-
-	// Positions for ToR switches
-	for(int i = 0; i < numOfEdge; i++){
-		switches[numOfCore + numOfAggr + i].posXY[0] = (i % (k/2))*widSw + 0.5*widSw + ((i / (k/2)) % 4) * (10 * feet + (k/2) * widSw);
-		switches[numOfCore + numOfAggr + i].posXY[1] = 0.5*lenSw + (i / (k*4/2)) * (lenSw + 8*feet);
 	}
 
 	// Link: Core - Aggregate
@@ -109,54 +84,6 @@ void Dionysus::readTopo(void){
 			ltmp.destinationID = src;
 			links.push_back(ltmp);
 		}
-	}
-
-	// Link: Edge - Edge
-	// Wireless link
-	ltmp.isWireless = true;
-	for(int i = 0; i < numOfEdge; i++){
-		src = numOfCore + numOfAggr + i;
-		for(int j = 0; j < numOfEdge; j++){
-			dst = numOfCore + numOfAggr + j;
-			if(src == dst) continue;
-
-			// Distance
-			x1 = switches[src].posXY[0];
-			y1 = switches[src].posXY[1];
-			x2 = switches[dst].posXY[0];
-			y2 = switches[dst].posXY[1];
-			if(dis(x1, y1, x2, y2) <= WIRELESS_RANGE){
-
-				// Src -> Dst
-				switches[src].port.push_back(dst);
-				switches[src].linkID.push_back(links.size());
-				ltmp.sourceID = src;
-				ltmp.destinationID = dst;
-
-				// Interference list
-				for(int z = 0; z < numOfEdge; z++){
-					mid = numOfCore + numOfAggr + z;
-					if(src == mid) continue;
-
-					// Position and vector operation
-					if(vecdot(switches[src].posXY, switches[dst].posXY, switches[src].posXY, switches[mid].posXY) > 0 &&
-						vecdot(switches[src].posXY, switches[dst].posXY, switches[mid].posXY, switches[dst].posXY) >= 0 &&
-						vecdis(switches[src].posXY, switches[dst].posXY, switches[src].posXY, switches[mid].posXY) <= 11*inch){
-						ltmp.iList.push_back(mid);
-					}
-				}
-				links.push_back(ltmp);
-				ltmp.iList.clear();
-			}
-		}
-
-		// Transceiver and interference node
-		switches[src].trancID = trancNode.size();
-		ttmp.switchID = src;
-		trancNode.push_back(ttmp);
-		switches[src].interID = interNode.size();
-		itmp.switchID = src;
-		interNode.push_back(itmp);
 	}
 }
 
@@ -211,18 +138,6 @@ void Dionysus::readFlow(void){
 							linkID = switches[ltmp.sourceID].linkID[portID];
 							links[linkID].linkCapacity -= ptmp.traffic;
 							links[linkID].curTraffic[fID] += ptmp.traffic;
-
-							// Wireless link
-							if(links[linkID].isWireless ){
-
-								// Wireless AP capacity
-								trancNode[ switches[ltmp.sourceID].trancID ].nodeCapacity -= ptmp.traffic;
-								trancNode[ switches[ltmp.destinationID].trancID ].nodeCapacity -= ptmp.traffic;
-
-								// Interference
-								for(int j = 0; j < (int)links[linkID].iList.size(); j++)
-									interNode[ switches[ links[linkID].iList[j] ].interID ].nodeCapacity -= ptmp.traffic;
-							}
 						}
 
 						// Exception

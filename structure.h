@@ -12,9 +12,6 @@ class Switch{
 		int tcamUsage;		// Current TCAM usage
 		vector<int>port;	// The switch ID this port connects to
 		vector<int>linkID;	// The link ID of this port
-		double posXY[2];	// X/Y position of ToR switch
-		int trancID;		// Transceiver node ID
-		int interID;		// Interference node ID
 };
 
 // Link node
@@ -25,28 +22,6 @@ class Link{
 		int destinationID;	// Destination switch ID
 		double linkCapacity;// Link capacity
 		vector<double>curTraffic;	// Current traffic of this link of some flow
-		bool isWireless;	// Mark as wireless or not
-		vector<int>iList;	// Interference list
-};
-
-// Transceiver Node
-class TrancNode{
-	public:
-		int dpID;			// ID for dependency graph
-		int switchID;		// ID of switch
-		int releaseCnt;		// Number of release on this node
-		int requireCnt;		// Number of require on this node
-		double nodeCapacity;// Node capacity
-};
-
-// Interference Node
-class InterNode{
-	public:
-		int dpID;			// ID for dependency graph
-		int switchID;		// ID of switch
-		int releaseCnt;		// Number of release on this node
-		int requireCnt;		// Number of require on this node
-		double nodeCapacity;// Node capacity
 };
 
 // Flow path
@@ -72,7 +47,7 @@ class Edge{
 };
 
 // Node (for dependency graph)
-enum{ RES_SWITCH, RES_LINK, RES_TRANC, RES_INTER, PATH, OPERATION };
+enum{ RES_SWITCH, RES_LINK, PATH, OPERATION };
 class Node{
 	public:
 		int nodeID;			// Node in dependency graph

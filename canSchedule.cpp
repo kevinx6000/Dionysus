@@ -9,7 +9,6 @@ bool Dionysus::canSchedule(int owDpID){
 	// Variables
 	int owID, oaDpID, odDpID, pDpID, pID, rDpID, rID;
 	int fID, fpID, sID, dID, portID, ingID, cID;
-	int ratio;
 	bool canSchedule, isChanged, hasPathParent;
 	double total, avTmp, traffic, preTotal, curTotal;
 	vector<double>preTraffic;
@@ -69,73 +68,6 @@ bool Dionysus::canSchedule(int owDpID){
 	// Some flow can be move right now
 	if(total > 0.0) canSchedule = true;
 	if(!hasPathParent) operations[ nodes[owDpID].nodeIndex ].isFinished = true;
-
-	// Check transceiver and interference node
-	if(canSchedule){
-
-		// Reset to false, and check whether at least one path can be updated
-		total = 0.0;
-		canSchedule = false;
-		oaDpID = mapID[ nodes[owDpID].parent[0] ];
-		for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
-
-			// Path nodes
-			pDpID = mapID[ nodes[oaDpID].parent[i] ];
-			if(nodes[pDpID].nodeType == PATH){
-
-				// Minimum available traffic
-				avTmp = paths[ nodes[pDpID].nodeIndex ].available;
-
-				// Resource nodes
-				for(int j = 0; j < (int)nodes[pDpID].parent.size(); j++){
-
-					// Transceiver
-					rDpID = mapID[ nodes[pDpID].parent[j] ];
-					if(nodes[rDpID].nodeType == RES_TRANC){
-
-						// Find out ratio: Link -> Path (only one fit)
-						rID = nodes[rDpID].nodeIndex;
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								ratio = nodes[rDpID].child[k].intWeight;
-
-						// Remaining resource
-						avTmp = min(avTmp, trancNode[ nodes[rDpID].nodeIndex ].nodeCapacity/ratio);
-
-						// All current demand
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								avTmp = min(avTmp, nodes[rDpID].child[k].dobWeight/ratio);
-					}
-
-					// Interference
-					if(nodes[rDpID].nodeType == RES_INTER){
-
-						// Find out ratio: Link -> Path (only one fit)
-						rID = nodes[rDpID].nodeIndex;
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								ratio = nodes[rDpID].child[k].intWeight;
-
-						// Remaining resource
-						avTmp = min(avTmp, interNode[ nodes[rDpID].nodeIndex ].nodeCapacity/ratio);
-
-						// All current demand
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								avTmp = min(avTmp, nodes[rDpID].child[k].dobWeight/ratio);
-					}
-				}
-
-				// Record and write back
-				total += avTmp;
-				paths[ nodes[pDpID].nodeIndex ].available = avTmp;
-			}
-		}
-
-		// Some flow can be move right now
-		if(total > 0.0) canSchedule = true;
-	}
 
 	// We try to update traffic "virtually", and record the resulting rule set
 	if(canSchedule){
@@ -363,60 +295,6 @@ bool Dionysus::canSchedule(int owDpID){
 				for(int j = 0; j < (int)nodes[pDpID].child.size(); j++)
 					if(mapID[ nodes[pDpID].child[j].nodeID ] == oaDpID)
 						nodes[pDpID].child[j].dobWeight -= avTmp;
-			}
-		}
-
-		// Update transceiver and interference resource
-		oaDpID = mapID[ nodes[owDpID].parent[0] ];
-		for(int i = 0; i < (int)nodes[oaDpID].parent.size(); i++){
-
-			// Path nodes
-			pDpID = mapID[ nodes[oaDpID].parent[i] ];
-			if(nodes[pDpID].nodeType == PATH){
-
-				// Minimum available traffic
-				avTmp = paths[ nodes[pDpID].nodeIndex ].available;
-
-				// Resource nodes
-				for(int j = 0; j < (int)nodes[pDpID].parent.size(); j++){
-
-					// Transceiver
-					rDpID = mapID[ nodes[pDpID].parent[j] ];
-					if(nodes[rDpID].nodeType == RES_TRANC){
-
-						// Find out ratio: Link -> Path (only one fit)
-						rID = nodes[rDpID].nodeIndex;
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								ratio = nodes[rDpID].child[k].intWeight;
-
-						// Remaining resource
-						trancNode[rID].nodeCapacity -= avTmp * ratio;
-
-						// All current demand
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								nodes[rDpID].child[k].dobWeight -= avTmp * ratio;
-					}
-
-					// Interference
-					if(nodes[rDpID].nodeType == RES_INTER){
-
-						// Find out ratio: Link -> Path (only one fit)
-						rID = nodes[rDpID].nodeIndex;
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								ratio = nodes[rDpID].child[k].intWeight;
-
-						// Remaining resource
-						interNode[rID].nodeCapacity -= avTmp * ratio;
-
-						// All current demand
-						for(int k = 0; k < (int)nodes[rDpID].child.size(); k++)
-							if(mapID[ nodes[rDpID].child[k].nodeID ] == pDpID)
-								nodes[rDpID].child[k].dobWeight -= avTmp * ratio;
-					}
-				}
 			}
 		}
 		
